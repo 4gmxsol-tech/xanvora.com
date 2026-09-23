@@ -100,66 +100,63 @@ function buildHouseNearTree(){
   house.position.set(-4.2,0,-3.2);scene.add(house);
 }
 
-function handleCommand(raw){
-  const command=raw.trim().toLowerCase();
+async function planCommand(raw){
+  const text=raw.trim();
+  if(!text)return null;
+
+  // Xanvora's command boundary is intentionally structured:
+  // natural-language intent -> validated game action.
+  // A remote AI provider can be plugged into planCommand later without
+  // exposing an API key in the static frontend.
+  const lower=text.toLowerCase();
+
+  if((lower.includes("build")||lower.includes("create")||lower.includes("make"))&&lower.includes("house")){
+    return {action:"create_building",type:"house",location:"near_tree"};
+  }
+  if((lower.includes("guard")||lower.includes("guardian")||lower.includes("protect"))&&
+     (lower.includes("robot")||lower.includes("npc"))){
+    return {action:"set_guardian",enabled:true};
+  }
+  if(lower.includes("clear")||lower.includes("reset")||lower.includes("remove house")){
+    return {action:"reset_world"};
+  }
+  return null;
+}
+
+function executeGameAction(action){
+  if(!action)return false;
+
+  switch(action.action){
+    case "create_building":
+      if(action.type==="house"){
+        buildHouseNearTree();
+        setStatus("Xanvora created a house near the tree.");
+        return true;
+      }
+      break;
+    case "set_guardian":
+      guardianMode=Boolean(action.enabled);
+      setStatus(guardianMode
+        ? "The robot is now in guardian mode."
+        : "The robot left guardian mode.");
+      return true;
+    case "reset_world":
+      if(house){scene.remove(house);house=null}
+      guardianMode="idle";
+      setStatus("World reset.");
+      return true;
+  }
+  return false;
+}
+
+async function handleCommand(raw){
+  const command=raw.trim();
   if(!command)return;
+  setStatus("Xanvora is interpreting your intent…");
 
-  if(command.includes("build")&&command.includes("house")){
-    buildHouseNearTree();
-    setStatus("Xanvora created a house near the tree.");
-    return;
-  }
-  if((command.includes("guard")||command.includes("guardian"))&&command.includes("robot")){
-    guardianMode="guard";
-    setStatus("The robot is now in guardian mode.");
-    return;
-  }
-  if(command.includes("clear")||command.includes("remove")){
-    if(house){scene.remove(house);house=null}
-    guardianMode="idle";
-    setStatus("World reset.");
-    return;
-  }
-  setStatus("Prototype command not implemented yet — try building a house or assigning the robot as guardian.");
+  const action=await planCommand(command);
+  if(executeGameAction(action))return;
+
+  setStatus("I understood the request, but this prototype does not have a validated game action for it yet.");
 }
 
-const form=document.querySelector("#command-form");
-const input=document.querySelector("#command");
-form.addEventListener("submit",e=>{
-  e.preventDefault();handleCommand(input.value);input.value="";
-});
-const status=document.querySelector("#status");
-function setStatus(message){status.textContent=message}
-
-const clock=new THREE.Clock();
-function animate(){
-  const dt=clock.getDelta();
-  let dx=0,dz=0;
-  if(keys.has("w")||keys.has("arrowup"))dz-=1;
-  if(keys.has("s")||keys.has("arrowdown"))dz+=1;
-  if(keys.has("a")||keys.has("arrowleft"))dx-=1;
-  if(keys.has("d")||keys.has("arrowright"))dx+=1;
-
-  const length=Math.hypot(dx,dz)||1;
-  player.position.x+=(dx/length)*5*dt;
-  player.position.z+=(dz/length)*5*dt;
-
-  camera.position.lerp(
-    new THREE.Vector3(player.position.x,player.position.y+9,player.position.z+12),
-    .08
-  );
-  camera.lookAt(player.position.x,.8,player.position.z);
-
-  npc.rotation.y+=guardianMode==="guard"?dt*1.8:dt*.25;
-  npcHead.rotation.y=npc.rotation.y;
-
-  renderer.render(scene,camera);
-  requestAnimationFrame(animate);
-}
-animate();
-
-addEventListener("resize",()=>{
-  camera.aspect=innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);
-});
