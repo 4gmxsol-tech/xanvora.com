@@ -10,10 +10,7 @@
 <body>
   <canvas id="game"></canvas>
   <div class="hud">
-    <div class="brand">
-      <div class="logo">XANVORA</div>
-      <div class="tagline">AI-native world prototype</div>
-    </div>
+    <div class="brand"><div class="logo">XANVORA</div><div class="tagline">AI-native world prototype</div></div>
     <div class="help">WASD / Arrow keys to move · Click the robot · Enter a world command</div>
     <div class="panel">
       <div class="panel-title">World Command</div>
@@ -21,9 +18,14 @@
         <input id="command" autocomplete="off" placeholder='Try: "Build a house near the tree"'>
         <button type="submit">Run</button>
       </form>
-      <div id="status">World ready.</div><div id="ai-note">AI planner: local prototype</div>
+      <div id="status">World ready.</div>
+      <div id="ai-note">AI planner: local fallback · set XANVORA_AI_API_URL to connect a secure planner</div>
     </div>
   </div>
+  <script>
+    // Optional deployment-time configuration. Never put a secret here.
+    window.XANVORA_AI_API_URL = "";
+  </script>
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>
