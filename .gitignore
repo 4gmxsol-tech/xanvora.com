@@ -1,0 +1,4 @@
+models/xanvora-v0/data/*
+models/xanvora-v0/checkpoints/*
+models/xanvora-v0/*.mp4
+models/xanvora-v0/__pycache__/
