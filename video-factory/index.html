@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Xanvora Video Factory</title><link rel="stylesheet" href="./style.css"></head>
+<body><main class="app"><header><div><div class="eyebrow">XANVORA</div><h1>Video Factory</h1><p>GPU-efficient video generation control plane.</p></div><a href="../">← Back to world</a></header>
+<section class="grid"><article class="card"><h2>Create video</h2>
+<label>Prompt<textarea id="prompt" rows="6" placeholder="Describe the scene, camera, lighting and motion..."></textarea></label>
+<div class="row"><label>Engine<select id="engine"><option value="auto">Auto</option><option value="ltx">LTX</option><option value="wan2gp">Wan2GP</option><option value="veed">VEED fallback</option></select></label>
+<label>Duration<select id="duration"><option value="4">4s</option><option value="5" selected>5s</option><option value="8">8s</option><option value="10">10s</option></select></label></div>
+<button id="generate">Generate</button><div id="notice" class="notice">No GPU is used by this page. Jobs are sent to the configured worker.</div></article>
+<article class="card"><h2>Jobs</h2><div id="jobs" class="jobs"><div class="empty">No jobs yet.</div></div></article></section>
+<footer>CPU-first UI · queue-based GPU worker · offloading-ready · no secrets in browser</footer></main>
+<script>window.XANVORA_VIDEO_API_URL="";</script><script type="module" src="./app.js"></script></body></html>
