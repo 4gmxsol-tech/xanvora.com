@@ -2,7 +2,7 @@ const $=id=>document.getElementById(id),jobsEl=$("jobs"),state=[];
 const savedApi=localStorage.getItem("xanvora_worker_url")||window.XANVORA_VIDEO_API_URL||"",savedToken=localStorage.getItem("xanvora_worker_token")||"";
 const workerInput=$("workerUrl"),tokenInput=$("workerToken"),hfInput=$("hfSpace");
 if(workerInput) workerInput.value=savedApi;if(tokenInput) tokenInput.value=savedToken;
-if(hfInput) hfInput.value=localStorage.getItem("xanvora_hf_space")||window.XANVORA_HF_SPACE||"https://akhaliq-ltx-2-5-workflow.hf.space";
+if(hfInput) hfInput.value=localStorage.getItem("xanvora_hf_space")||window.XANVORA_HF_SPACE||"https://chopperblu-ltx-2-5-demo.hf.space";
 function api(){return (workerInput?.value.trim()||window.XANVORA_VIDEO_API_URL||"").replace(/\/$/,"")}
 function token(){return tokenInput?.value.trim()||""}
 function hfSpace(){return (hfInput?.value.trim()||window.XANVORA_HF_SPACE||"").replace(/\/$/,"")}
@@ -13,7 +13,7 @@ async function poll(job,base){if(!job.id)return;for(let i=0;i<720;i++){await new
 async function hfGenerate(job,space){
   localStorage.setItem("xanvora_hf_space",space);
   job.status="queued";render();
-  const data=[job.prompt,null,832,480,job.duration,Math.floor(Math.random()*2147483647),"conv",false,true];
+  const data=[job.prompt,null,1024,576,job.duration,false,Math.floor(Math.random()*2147483647),true,"conv"];
   const r=await fetch(space+"/gradio_api/call/generate_video",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({data})});
   if(!r.ok){throw new Error("Hugging Face API HTTP "+r.status)}
   const start=await r.json(); if(!start.event_id)throw new Error("Hugging Face did not return an event id");
@@ -27,7 +27,7 @@ async function hfGenerate(job,space){
   if(!result)throw new Error("No completed video was returned. The Space may use a different API endpoint or be busy.");
   const video=result[0]?.url||result[0]?.path||result[0];
   if(!video)throw new Error("The Space returned no video URL");
-  job.status="completed";job.video_url=/^https?:\/\//.test(video)?video:space+"/gradio_api/file="+encodeURIComponent(video);
+  job.status="completed";job.video_url=/^https?:\/\//.test(video)?video:(video?.url?video.url:space+"/gradio_api/file="+encodeURIComponent(video));
   render();
 }
 $("generate").onclick=async()=>{
