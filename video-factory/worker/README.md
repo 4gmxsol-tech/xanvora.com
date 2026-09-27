@@ -1,12 +1,35 @@
-# Xanvora Video Worker Contract
+# Xanvora Video Worker
 
-POST /v1/video/jobs
-{ "prompt": "...", "engine": "auto|ltx|wan2gp|veed", "duration": 5 }
+## No-Colab deployment
 
-GET /v1/video/jobs/:id
+This worker is packaged for a persistent NVIDIA GPU host. It is not dependent on Google Colab.
 
-The worker should route auto to the lowest-cost compatible backend, queue jobs, load models only while jobs exist, use CPU offloading/quantization where supported, and shut down idle GPU capacity.
+## Real generation profile
 
-Suggested first backend: Wan2GP. Suggested second backend: LTX. VEED is an optional external fallback.
+- Wan2GP / Wan 2.2 FastWan 5B
+- model: ti2v_2_2_fastwan
+- 832x480
+- 8 inference steps
+- 24 fps
+- profile 4 + SDPA
+- serialized queue with batch endpoint
 
-No provider keys or model weights belong in this repository.
+## Docker
+
+Build:
+
+docker build -t xanvora-wan2gp .
+
+Run:
+
+docker run --gpus all -p 8000:8000 -v xanvora-video-data:/data/videos xanvora-wan2gp
+
+The GPU host must expose the worker through HTTPS before it is entered into Xanvora Video Factory.
+
+## Endpoints
+
+- GET /health
+- POST /v1/video/jobs
+- POST /v1/video/batch
+- GET /v1/video/jobs/{job_id}
+- GET /v1/video/files/{filename}
