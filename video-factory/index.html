@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Xanvora Video Factory</title><link rel="stylesheet" href="./style.css"></head>
-<body><main class="app"><header><div><div class="eyebrow">XANVORA</div><h1>Video Factory</h1><p>GPU-efficient video generation control plane.</p></div><a href="../">← Back to world</a></header>
+<body><main class="app"><header><div><div class="eyebrow">XANVORA</div><h1>Video Factory</h1><p>Real AI video generation — cloud-first, no Colab required.</p></div><a href="../">← Back to world</a></header>
 <section class="grid"><article class="card"><h2>Create video</h2>
 <label>Prompt<textarea id="prompt" rows="6" placeholder="Describe the scene, camera, lighting and motion..."></textarea></label>
-<div class="row"><label>Engine<select id="engine"><option value="auto">Auto</option><option value="free-ltx">🔥 Free Cloud — LTX-2.5 ZeroGPU</option><option value="ltx">LTX</option><option value="wan2gp">Wan2GP</option><option value="veed">VEED fallback</option></select></label>
+<div class="row"><label>Engine<select id="engine"><option value="auto" selected>Auto — Cloud first</option><option value="free-ltx">🔥 Cloud — LTX-2.5 ZeroGPU</option><option value="ltx">LTX</option><option value="wan2gp">Wan2GP</option><option value="veed">VEED fallback</option></select></label>
 <label>Duration<select id="duration"><option value="4">4s</option><option value="5" selected>5s</option><option value="8">8s</option><option value="10">10s</option></select></label></div>
 <button id="generate">Generate</button>
 <hr>
@@ -12,11 +12,11 @@
 <button id="generateBatch">🔥 Generate Batch on Wan2GP</button>
 <label class="worker-field">Free Cloud Space<input id="hfSpace" type="url" placeholder="https://chopperblu-ltx-2-5-demo.hf.space"></label>
 <label class="worker-field">Hugging Face Token (optional)<input id="hfToken" type="password" placeholder="hf_... for your account quota"></label>
-<label class="worker-field">Worker URL<input id="workerUrl" type="url" placeholder="https://…trycloudflare.com"></label>
-<label class="worker-field">Worker Token<input id="workerToken" type="password" placeholder="Paste the Colab token"></label>
-<a class="free-gpu" href="https://colab.research.google.com/github/4gmxsol-tech/xanvora.com/blob/main/video-factory/colab/xanvora-free-gpu.ipynb" target="_blank" rel="noopener">🔥 Open Free GPU Runner</a>
+<label class="worker-field">Worker URL<input id="workerUrl" type="url" placeholder="https://your-gpu-worker.example.com"></label>
+<label class="worker-field">Worker Token<input id="workerToken" type="password" placeholder="GPU Worker token (optional for public worker)"></label>
+<div class="notice">☁️ No Colab required. Auto uses the cloud video engine first. Add a persistent Wan2GP GPU Worker when you want Wan 2.2 generation and batching.</div>
 <div id="workerStatus" class="notice">Wan2GP Worker: not connected</div>
 <div id="notice" class="notice">Wan2GP is the real video-diffusion backend. Free Cloud is a quota-limited fallback.</div></article>
 <article class="card"><h2>Jobs</h2><div id="jobs" class="jobs"><div class="empty">No jobs yet.</div></div></article></section>
-<footer>CPU-first UI · WanGP real video diffusion · batch queue · optional ZeroGPU fallback</footer></main>
+<footer>Cloud-first UI · real AI video diffusion · batch queue · optional Wan2GP GPU worker</footer></main>
 <script>window.XANVORA_VIDEO_API_URL="";</script><script type="module" src="./app.js"></script></body></html>
