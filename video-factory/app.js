@@ -1,12 +1,53 @@
 const $=id=>document.getElementById(id),jobsEl=$("jobs"),state=[];
 const savedApi=localStorage.getItem("xanvora_worker_url")||window.XANVORA_VIDEO_API_URL||"",savedToken=localStorage.getItem("xanvora_worker_token")||"";
-const workerInput=$("workerUrl"),tokenInput=$("workerToken"); if(workerInput) workerInput.value=savedApi;if(tokenInput) tokenInput.value=savedToken;
-function api(){return (workerInput?.value.trim()||window.XANVORA_VIDEO_API_URL||"").replace(/\/$/,"")}function token(){return tokenInput?.value.trim()||""}
+const workerInput=$("workerUrl"),tokenInput=$("workerToken"),hfInput=$("hfSpace");
+if(workerInput) workerInput.value=savedApi;if(tokenInput) tokenInput.value=savedToken;
+if(hfInput) hfInput.value=localStorage.getItem("xanvora_hf_space")||window.XANVORA_HF_SPACE||"https://akhaliq-ltx-2-5-workflow.hf.space";
+function api(){return (workerInput?.value.trim()||window.XANVORA_VIDEO_API_URL||"").replace(/\/$/,"")}
+function token(){return tokenInput?.value.trim()||""}
+function hfSpace(){return (hfInput?.value.trim()||window.XANVORA_HF_SPACE||"").replace(/\/$/,"")}
 function headers(){return {"content-type":"application/json","X-Xanvora-Token":token()}}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
 function render(){jobsEl.innerHTML=state.length?state.map(j=>'<div class="job"><b>'+esc(j.status)+' · '+esc(j.engine)+'</b><div class="meta">'+esc(j.prompt)+'<br>'+esc(j.id)+' · '+esc(j.duration)+'s</div>'+(j.video_url?'<p><a href="'+j.video_url+'" target="_blank" rel="noopener">Open video</a></p>':"")+(j.error?'<div class="meta">'+esc(j.error)+'</div>':"")+'</div>').join(""):'<div class="empty">No jobs yet.</div>'}
 async function poll(job,base){if(!job.id)return;for(let i=0;i<720;i++){await new Promise(r=>setTimeout(r,3000));try{const r=await fetch(base+"/v1/video/jobs/"+encodeURIComponent(job.id),{headers:{"X-Xanvora-Token":token()}});if(!r.ok)continue;const data=await r.json();Object.assign(job,data);if(data.video_url&&!/^https?:\/\//.test(data.video_url))job.video_url=base+data.video_url;render();if(["completed","error"].includes(job.status))return}catch(e){}}}
-$("generate").onclick=async()=>{const prompt=$("prompt").value.trim(),base=api(),tok=token();if(!prompt){$("notice").textContent="Enter a prompt first.";return}if(!base||!tok){$("notice").textContent="Paste the Colab Worker URL and Worker Token first.";return}
-localStorage.setItem("xanvora_worker_url",base);localStorage.setItem("xanvora_worker_token",tok);const job={id:"local-"+Date.now(),prompt,engine:$("engine").value,duration:Number($("duration").value),status:"queued"};state.unshift(job);render();$("notice").textContent="Checking GPU worker…";
-try{const h=await fetch(base+"/health",{headers:{"X-Xanvora-Token":tok}});if(!h.ok)throw new Error("Worker health check failed (HTTP "+h.status+")");const r=await fetch(base+"/v1/video/jobs",{method:"POST",headers:headers(),body:JSON.stringify({prompt,engine:job.engine,duration:job.duration})});if(!r.ok){const t=await r.text();throw new Error("HTTP "+r.status+" "+t)}Object.assign(job,await r.json());render();$("notice").textContent="Generation running on Colab GPU…";poll(job,base)}catch(e){job.status="error";render();$("notice").textContent="Worker request failed: "+e.message}};
+async function hfGenerate(job,space){
+  localStorage.setItem("xanvora_hf_space",space);
+  job.status="queued";render();
+  const data=[job.prompt,null,832,480,job.duration,Math.floor(Math.random()*2147483647),"conv",false,true];
+  const r=await fetch(space+"/gradio_api/call/generate_video",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({data})});
+  if(!r.ok){throw new Error("Hugging Face API HTTP "+r.status)}
+  const start=await r.json(); if(!start.event_id)throw new Error("Hugging Face did not return an event id");
+  const s=await fetch(space+"/gradio_api/call/generate_video/"+encodeURIComponent(start.event_id));
+  if(!s.ok)throw new Error("Hugging Face event HTTP "+s.status);
+  const text=await s.text();
+  const lines=text.split("\n");
+  let result=null,error=null;
+  for(let i=0;i<lines.length;i++){if(lines[i].startsWith("event: error"))error=lines[i+1]||"generation error";if(lines[i].startsWith("event: complete")){try{result=JSON.parse(lines[i+1]?.replace(/^data:\s*/,"")||"null")}catch{}}}
+  if(error)throw new Error(error);
+  if(!result)throw new Error("No completed video was returned. The Space may use a different API endpoint or be busy.");
+  const video=result[0]?.url||result[0]?.path||result[0];
+  if(!video)throw new Error("The Space returned no video URL");
+  job.status="completed";job.video_url=/^https?:\/\//.test(video)?video:space+"/gradio_api/file="+encodeURIComponent(video);
+  render();
+}
+$("generate").onclick=async()=>{
+ const prompt=$("prompt").value.trim(),engine=$("engine").value,duration=Number($("duration").value),base=api(),tok=token(),space=hfSpace();
+ if(!prompt){$("notice").textContent="Enter a prompt first.";return}
+ const job={id:"local-"+Date.now(),prompt,engine,duration,status:"queued"};state.unshift(job);render();
+ try{
+   if(engine==="free-ltx" || (engine==="auto"&&!base)){
+     $("notice").textContent="Sending to Hugging Face ZeroGPU…";
+     await hfGenerate(job,space);
+     $("notice").textContent="Video generated by the free ZeroGPU Space.";
+     return;
+   }
+   if(!base||!tok)throw new Error("Paste the Worker URL and Worker Token, or choose Free Cloud.");
+   localStorage.setItem("xanvora_worker_url",base);localStorage.setItem("xanvora_worker_token",tok);
+   $("notice").textContent="Checking GPU worker…";
+   const h=await fetch(base+"/health",{headers:{"X-Xanvora-Token":tok}});if(!h.ok)throw new Error("Worker health check failed (HTTP "+h.status+")");
+   const r=await fetch(base+"/v1/video/jobs",{method:"POST",headers:headers(),body:JSON.stringify({prompt,engine:engine==="auto"?"wan2gp":engine,duration})});
+   if(!r.ok){const t=await r.text();throw new Error("HTTP "+r.status+" "+t)}
+   Object.assign(job,await r.json());render();$("notice").textContent="Generation running on GPU worker…";poll(job,base);
+ }catch(e){job.status="error";job.error=e.message;render();$("notice").textContent="Generation failed: "+e.message}
+};
 render();
