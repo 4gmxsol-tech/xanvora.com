@@ -1,0 +1,21 @@
+services:
+  video-worker:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      VIDEO_MODEL: wan2gp
+      IDLE_SHUTDOWN_SECONDS: "600"
+    volumes:
+      - model-cache:/models
+      - job-data:/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+volumes:
+  model-cache:
+  job-data:
