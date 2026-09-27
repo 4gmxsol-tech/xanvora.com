@@ -69,3 +69,17 @@ $("generateBatch").onclick=async()=>{
  }catch(e){$("notice").textContent="Batch failed: "+e.message}
 };
 render();checkWorker();
+
+async function v0Smoke(){
+ const status=$("v0Status"), prompt=($("v0Prompt")?.value||"a humanoid robot walking through a warehouse").trim();
+ const base=api(), tok=token();
+ if(!base||!tok){status.textContent="🟠 Add the GPU Worker URL and token first.";return}
+ status.textContent="🧪 Running Xanvora-V0 smoke test on GPU Worker…";
+ try{
+  const r=await fetch(base+"/v1/xanvora-v0/smoke",{method:"POST",headers:headers(),body:JSON.stringify({prompt})});
+  const d=await r.json();
+  if(!r.ok)throw new Error(d.detail||d.error||("HTTP "+r.status));
+  status.textContent="🟢 Xanvora-V0 PASS · device "+d.device+" · output "+d.output_shape.join("×")+" · loss "+Number(d.loss).toFixed(5);
+ }catch(e){status.textContent="🔴 V0 test failed: "+e.message}
+}
+$("v0Smoke")?.addEventListener("click",v0Smoke);
