@@ -6,13 +6,17 @@
 <div class="row"><label>Engine<select id="engine"><option value="auto">Auto</option><option value="free-ltx">🔥 Free Cloud — LTX-2.5 ZeroGPU</option><option value="ltx">LTX</option><option value="wan2gp">Wan2GP</option><option value="veed">VEED fallback</option></select></label>
 <label>Duration<select id="duration"><option value="4">4s</option><option value="5" selected>5s</option><option value="8">8s</option><option value="10">10s</option></select></label></div>
 <button id="generate">Generate</button>
+<hr>
+<h3>Batch generation</h3>
+<label>Prompts — one per line<textarea id="batchPrompts" rows="5" placeholder="One prompt per line — up to 100 on the Wan2GP worker"></textarea></label>
+<button id="generateBatch">🔥 Generate Batch on Wan2GP</button>
 <label class="worker-field">Free Cloud Space<input id="hfSpace" type="url" placeholder="https://chopperblu-ltx-2-5-demo.hf.space"></label>
 <label class="worker-field">Hugging Face Token (optional)<input id="hfToken" type="password" placeholder="hf_... for your account quota"></label>
 <label class="worker-field">Worker URL<input id="workerUrl" type="url" placeholder="https://…trycloudflare.com"></label>
 <label class="worker-field">Worker Token<input id="workerToken" type="password" placeholder="Paste the Colab token"></label>
 <a class="free-gpu" href="https://colab.research.google.com/github/4gmxsol-tech/xanvora.com/blob/main/video-factory/colab/xanvora-free-gpu.ipynb" target="_blank" rel="noopener">🔥 Open Free GPU Runner</a>
 <div id="workerStatus" class="notice">Wan2GP Worker: not connected</div>
-<div id="notice" class="notice">Free Cloud uses Hugging Face ZeroGPU. Free accounts have daily quota; authenticate with your HF token to use your own quota.</div></article>
+<div id="notice" class="notice">Wan2GP is the real video-diffusion backend. Free Cloud is a quota-limited fallback.</div></article>
 <article class="card"><h2>Jobs</h2><div id="jobs" class="jobs"><div class="empty">No jobs yet.</div></div></article></section>
-<footer>CPU-first UI · Hugging Face ZeroGPU free cloud · optional Wan2GP worker</footer></main>
+<footer>CPU-first UI · WanGP real video diffusion · batch queue · optional ZeroGPU fallback</footer></main>
 <script>window.XANVORA_VIDEO_API_URL="";</script><script type="module" src="./app.js"></script></body></html>
