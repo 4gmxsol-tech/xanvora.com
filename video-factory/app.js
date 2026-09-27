@@ -1,3 +1,4 @@
+import {runXanvoraV0WebGPU} from "./xanvora-v0-webgpu.js";
 const $=id=>document.getElementById(id),jobsEl=$("jobs"),state=[];
 const savedApi=localStorage.getItem("xanvora_worker_url")||window.XANVORA_VIDEO_API_URL||"",savedToken=localStorage.getItem("xanvora_worker_token")||"",savedHFToken=localStorage.getItem("xanvora_hf_token")||"";
 const workerInput=$("workerUrl"),tokenInput=$("workerToken"),hfInput=$("hfSpace"),hfTokenInput=$("hfToken"),workerStatus=$("workerStatus");
@@ -72,14 +73,13 @@ render();checkWorker();
 
 async function v0Smoke(){
  const status=$("v0Status"), prompt=($("v0Prompt")?.value||"a humanoid robot walking through a warehouse").trim();
- const base=api(), tok=token();
- if(!base||!tok){status.textContent="🟠 Add the GPU Worker URL and token first.";return}
- status.textContent="🧪 Running Xanvora-V0 smoke test on GPU Worker…";
+ const preview=$("v0Preview");
+ status.textContent="🧪 Starting Xanvora-V0 locally with WebGPU…";
  try{
-  const r=await fetch(base+"/v1/xanvora-v0/smoke",{method:"POST",headers:headers(),body:JSON.stringify({prompt})});
-  const d=await r.json();
-  if(!r.ok)throw new Error(d.detail||d.error||("HTTP "+r.status));
-  status.textContent="🟢 Xanvora-V0 PASS · device "+d.device+" · output "+d.output_shape.join("×")+" · loss "+Number(d.loss).toFixed(5);
- }catch(e){status.textContent="🔴 V0 test failed: "+e.message}
+  const out=await runXanvoraV0WebGPU(prompt,{frames:24,width:256,height:144,fps:8,onProgress:p=>{status.textContent="🧪 Xanvora-V0 WebGPU · "+Math.round(p*100)+"%";}});
+  preview.replaceChildren(out.canvas);
+  const link=document.createElement("a");link.href=out.url;link.download="xanvora-v0-preview.webp";link.textContent="Open local preview";link.style.display="block";link.style.marginTop="8px";preview.appendChild(link);
+  status.textContent="🟢 Xanvora-V0 WebGPU PASS · "+out.frames+" frames · "+out.fps+" FPS · "+out.elapsed_ms+" ms · local GPU";
+ }catch(e){status.textContent="🔴 Browser V0 failed: "+e.message}
 }
 $("v0Smoke")?.addEventListener("click",v0Smoke);
