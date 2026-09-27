@@ -1,0 +1,17 @@
+model:
+  frames: 16
+  size: 128
+  base: 64
+  layers: 6
+  heads: 4
+
+training:
+  steps: 10000
+  batch: 1
+  learning_rate: 0.0002
+  validation_every: 500
+  checkpoint_every: 500
+
+data:
+  train: data/train.jsonl
+  validation: data/val.jsonl
