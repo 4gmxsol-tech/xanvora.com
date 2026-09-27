@@ -4,6 +4,8 @@ WORKDIR /opt
 RUN git clone --depth 1 https://github.com/deepbeepmeep/Wan2GP.git
 WORKDIR /opt/Wan2GP
 RUN python3.11 -m pip install --upgrade pip && python3.11 -m pip install -r requirements.txt
+RUN git clone --depth 1 https://github.com/4gmxsol-tech/xanvora.com.git /opt/xanvora
+ENV XANVORA_MODEL_ROOT=/opt/xanvora/models/xanvora-v0
 WORKDIR /app
 COPY requirements.txt .
 RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
