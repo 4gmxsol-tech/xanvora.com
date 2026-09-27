@@ -74,12 +74,12 @@ render();checkWorker();
 async function v0Smoke(){
  const status=$("v0Status"), prompt=($("v0Prompt")?.value||"a humanoid robot walking through a warehouse").trim();
  const preview=$("v0Preview");
- status.textContent="🧪 Starting Xanvora-V0 locally with WebGPU…";
+ status.textContent="🧪 Starting Xanvora-V0 locally…";
  try{
-  const out=await runXanvoraV0WebGPU(prompt,{frames:24,width:256,height:144,fps:8,onProgress:p=>{status.textContent="🧪 Xanvora-V0 WebGPU · "+Math.round(p*100)+"%";}});
+  const out=await runXanvoraV0WebGPU(prompt,{frames:24,width:256,height:144,fps:8,onProgress:p=>{status.textContent="🧪 Xanvora-V0 · "+Math.round(p*100)+"%";}});
   preview.replaceChildren(out.canvas);
   const link=document.createElement("a");link.href=out.url;link.download="xanvora-v0-preview.webp";link.textContent="Open local preview";link.style.display="block";link.style.marginTop="8px";preview.appendChild(link);
-  status.textContent="🟢 Xanvora-V0 WebGPU PASS · "+out.frames+" frames · "+out.fps+" FPS · "+out.elapsed_ms+" ms · local GPU";
+  status.textContent="🟢 Xanvora-V0 PASS · "+out.engine+" · "+out.frames+" frames · "+out.fps+" FPS · "+out.elapsed_ms+" ms";
  }catch(e){status.textContent="🔴 Browser V0 failed: "+e.message}
 }
 $("v0Smoke")?.addEventListener("click",v0Smoke);
