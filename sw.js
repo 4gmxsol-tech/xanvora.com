@@ -1,4 +1,4 @@
-const VERSION='xanvora-321591cbe2b28da27c997979dc452ca6209f2e92';
+const VERSION='xanvora-live-cards-41003a876aada69d9a557e557f93185c8623a57d';
 const STATIC=[location.pathname,'./style.css','./src/main.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(STATIC)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
