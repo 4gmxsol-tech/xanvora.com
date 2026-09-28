@@ -1,4 +1,4 @@
-const VERSION='xanvora-c336564aed540c7add500761d379558cbc10ffb3';
+const VERSION='xanvora-668954e75e202ba8eb5ce0f64fd743cf661cc3ca';
 const STATIC=[location.pathname,'./style.css','./src/main.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(STATIC)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
