@@ -95,3 +95,19 @@ async function readExif(input){
  return 'No EXIF segment detected';
 }
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+const indexFiles=q('#index-files'),indexAdd=q('#index-add'),indexSearch=q('#index-search'),indexClear=q('#index-clear'),indexStatus=q('#index-status'),indexResults=q('#index-results');
+let extractor=null,queryEmbedding=null;
+async function getExtractor(){if(extractor)return extractor;status.textContent='Loading local vision model (first run may take a while)…';const mod=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm');extractor=await mod.pipeline('image-feature-extraction','Xenova/clip-vit-base-patch32',{dtype:'q8'});return extractor}
+function db(){return new Promise((resolve,reject)=>{const r=indexedDB.open('xanvora-index',1);r.onupgradeneeded=()=>r.result.createObjectStore('images',{keyPath:'id',autoIncrement:true});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+async function putIndex(item){const d=await db();return new Promise((resolve,reject)=>{const tx=d.transaction('images','readwrite');tx.objectStore('images').add(item);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}
+async function allIndex(){const d=await db();return new Promise((resolve,reject)=>{const tx=d.transaction('images','readonly');const r=tx.objectStore('images').getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+async function clearIndex(){const d=await db();return new Promise((resolve,reject)=>{const tx=d.transaction('images','readwrite');tx.objectStore('images').clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}
+function vec(t){return Array.from(t.data||t.tolist?.()?.[0]||[])}
+function cosine(a,b){let dot=0,aa=0,bb=0;for(let i=0;i<a.length;i++){dot+=a[i]*b[i];aa+=a[i]*a[i];bb+=b[i]*b[i]}return dot/(Math.sqrt(aa)*Math.sqrt(bb)||1)}
+async function embedFile(file){const p=await getExtractor();const url=URL.createObjectURL(file);try{const out=await p(url,{pool:true});return vec(out)}finally{URL.revokeObjectURL(url)}}
+indexAdd.onclick=()=>indexFiles.click();
+indexFiles.onchange=async e=>{const files=[...e.target.files];if(!files.length)return;try{indexAdd.disabled=true;for(let i=0;i<files.length;i++){indexStatus.textContent='Indexing '+(i+1)+' / '+files.length+'…';const emb=await embedFile(files[i]);await putIndex({name:files[i].name,size:files[i].size,type:files[i].type,embedding:emb,created:new Date().toISOString()})}const n=(await allIndex()).length;indexStatus.textContent=n+' reference image'+(n===1?'':'s')+' indexed locally.';indexSearch.disabled=!f}catch(e){console.error(e);indexStatus.textContent='Indexing failed: '+(e.message||e)}finally{indexAdd.disabled=false;indexFiles.value=''}};
+indexSearch.onclick=async()=>{if(!f)return;try{indexSearch.disabled=true;indexStatus.textContent='Computing query embedding…';queryEmbedding=await embedFile(f);const items=await allIndex();const ranked=items.map(x=>({...x,score:cosine(queryEmbedding,x.embedding)})).sort((a,b)=>b.score-a.score).slice(0,12);indexResults.innerHTML='<h3>Local visual matches</h3>'+(!ranked.length?'<p>Index is empty.</p>':ranked.map((x,i)=>'<div class="match"><strong>#'+(i+1)+' '+escapeHtml(x.name)+'</strong><span>Similarity '+(x.score*100).toFixed(1)+'%</span></div>').join(''));indexStatus.textContent=ranked.length?'Local comparison complete.':'Index is empty.'}catch(e){console.error(e);indexStatus.textContent='Local search failed: '+(e.message||e)}finally{indexSearch.disabled=false}};
+indexClear.onclick=async()=>{await clearIndex();indexResults.innerHTML='';indexStatus.textContent='Local index cleared.';indexSearch.disabled=true};
+(async()=>{try{const n=(await allIndex()).length;if(n){indexStatus.textContent=n+' reference image'+(n===1?'':'s')+' indexed locally.';indexSearch.disabled=!f}}catch(e){}})();
