@@ -1,1 +1,45 @@
-{"manifest_version":3,"name":"Xanvora Live Bridge","version":"0.1.0","description":"Streams visible reverse-image search results into Xanvora.","permissions":["tabs"],"host_permissions":["https://xanvora.com/*","https://www.xanvora.com/*","https://yandex.com/*","https://yandex.ru/*"],"background":{"service_worker":"service-worker.js"},"content_scripts":[{"matches":["https://xanvora.com/*","https://www.xanvora.com/*"],"js":["xanvora-bridge.js"],"run_at":"document_idle"},{"matches":["https://yandex.com/images/*","https://yandex.ru/images/*"],"js":["yandex-collector.js"],"run_at":"document_idle"}]}
+{
+  "manifest_version": 3,
+  "name": "Xanvora Live Bridge",
+  "version": "0.1.1",
+  "description": "Streams visible reverse-image search results into Xanvora.",
+  "permissions": [
+    "tabs",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://xanvora.com/*",
+    "https://www.xanvora.com/*",
+    "https://yandex.com/*",
+    "https://yandex.ru/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://xanvora.com/*",
+        "https://www.xanvora.com/*"
+      ],
+      "js": [
+        "xanvora-bridge.js",
+        "live-screen.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://yandex.com/images/*",
+        "https://yandex.ru/images/*"
+      ],
+      "js": [
+        "yandex-collector.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Xanvora Live View"
+  }
+}
