@@ -185,15 +185,43 @@ function cosine(a,b){let dot=0,aa=0,bb=0;for(let i=0;i<a.length;i++){dot+=a[i]*b
 async function embedFile(file){const p=await getExtractor();const url=URL.createObjectURL(file);try{const out=await p(url,{pool:true});return vec(out)}finally{URL.revokeObjectURL(url)}}
 function bitSimilarity(a,b){if(!a||!b||a.length!==b.length)return null;let same=0;for(let i=0;i<a.length;i++)if(a[i]===b[i])same++;return same/a.length}
 function combinedSimilarity(item,query){
- const clip=cosine(query.embedding,item.embedding);
+ const clip=Math.max(0,Math.min(1,cosine(query.embedding,item.embedding)));
  const ph=bitSimilarity(query.phash,item.phash);
  const dh=bitSimilarity(query.dhash,item.dhash);
  const parts=[{v:clip,w:.6},{v:ph,w:.25},{v:dh,w:.15}].filter(x=>x.v!==null&&Number.isFinite(x.v));
  const totalW=parts.reduce((a,x)=>a+x.w,0)||1;
- return {score:parts.reduce((a,x)=>a+x.v*x.w,0)/totalW,clip,phash:ph,dhash:dh};
+ const score=parts.reduce((a,x)=>a+x.v*x.w,0)/totalW;
+ let kind='Visually Similar';
+ if(score>=.97 && ph>=.95 && dh>=.95)kind='Near Duplicate';
+ else if(ph>=.94 && dh>=.9)kind='Resized / Re-encoded';
+ else if(ph>=.86 && dh>=.82)kind='Likely Crop / Transform';
+ else if(clip>=.9)kind='Semantically Similar';
+ return {score,clip,phash:ph,dhash:dh,kind};
+}
+function matchClass(score){if(score>=.97)return'near';if(score>=.9)return'high';if(score>=.75)return'mid';return'low'}
+function renderRanked(ranked){
+ const host=indexResults;
+ host.innerHTML='<div class="match-toolbar"><select id="match-filter"><option value="all">All matches</option><option value="near">Near Duplicate</option><option value="high">High similarity</option><option value="mid">Similar</option></select><select id="match-sort"><option value="score">Best match</option><option value="clip">Highest CLIP</option><option value="phash">Highest pHash</option><option value="dhash">Highest dHash</option></select></div><h3>Local visual matches</h3><div id="match-grid" class="match-grid"></div>';
+ const grid=host.querySelector('#match-grid');
+ const draw=()=>{
+  let list=[...ranked];
+  const filter=host.querySelector('#match-filter').value,sort=host.querySelector('#match-sort').value;
+  if(filter!=='all')list=list.filter(x=>matchClass(x.score)===filter);
+  list.sort((a,b)=>b[sort]-a[sort]);
+  grid.innerHTML='';
+  for(const [i,x] of list.slice(0,24).entries()){
+   const card=document.createElement('article');card.className='match-card';
+   if(x.blob){const img=document.createElement('img');img.src=URL.createObjectURL(x.blob);img.onload=()=>URL.revokeObjectURL(img.src);img.alt=x.name;card.appendChild(img)}
+   const body=document.createElement('div');body.className='match-body';
+   body.innerHTML='<strong>#'+(i+1)+' '+escapeHtml(x.name)+'</strong><b>'+ (x.score*100).toFixed(1)+'% Combined</b><span>'+escapeHtml(x.kind)+'</span><small>CLIP '+(x.clip*100).toFixed(1)+'% · pHash '+(x.phash*100).toFixed(1)+'% · dHash '+(x.dhash*100).toFixed(1)+'%</small>';
+   card.appendChild(body);grid.appendChild(card);
+  }
+  if(!list.length)grid.innerHTML='<p>No matches in this filter.</p>';
+ };
+ host.querySelector('#match-filter').onchange=draw;host.querySelector('#match-sort').onchange=draw;draw();
 }
 indexAdd.onclick=()=>indexFiles.click();
-indexFiles.onchange=async e=>{const files=[...e.target.files];if(!files.length)return;try{indexAdd.disabled=true;for(let i=0;i<files.length;i++){indexStatus.textContent='Indexing '+(i+1)+' / '+files.length+'…';const emb=await embedFile(files[i]);const bmp=await createImageBitmap(files[i]);const fp=await imageFingerprints(bmp);if(bmp.close)bmp.close();await putIndex({name:files[i].name,size:files[i].size,type:files[i].type,embedding:emb,phash:fp.phash,dhash:fp.dhash,ahash:fp.ahash,created:new Date().toISOString()})}const n=(await allIndex()).length;indexStatus.textContent=n+' reference image'+(n===1?'':'s')+' indexed locally.';indexSearch.disabled=!f}catch(e){console.error(e);indexStatus.textContent='Indexing failed: '+(e.message||e)}finally{indexAdd.disabled=false;indexFiles.value=''}};
-indexSearch.onclick=async()=>{if(!f)return;try{indexSearch.disabled=true;indexStatus.textContent='Computing query embedding…';queryEmbedding=await embedFile(f);const qb=await createImageBitmap(f);const qfp=await imageFingerprints(qb);if(qb.close)qb.close();const query={embedding:queryEmbedding,phash:qfp.phash,dhash:qfp.dhash};const items=await allIndex();const ranked=items.map(x=>({...x,...combinedSimilarity(x,query)})).sort((a,b)=>b.score-a.score).slice(0,12);indexResults.innerHTML='<h3>Local visual matches</h3>'+(!ranked.length?'<p>Index is empty.</p>':ranked.map((x,i)=>'<div class="match"><strong>#'+(i+1)+' '+escapeHtml(x.name)+'</strong><span>Combined '+(x.score*100).toFixed(1)+'% · CLIP '+(x.clip*100).toFixed(1)+'% · pHash '+(x.phash===null?'—':(x.phash*100).toFixed(1)+'%')+' · dHash '+(x.dhash===null?'—':(x.dhash*100).toFixed(1)+'%')+'</span></div>').join(''));indexStatus.textContent=ranked.length?'Combined CLIP + pHash + dHash comparison complete.':'Index is empty.'}catch(e){console.error(e);indexStatus.textContent='Local search failed: '+(e.message||e)}finally{indexSearch.disabled=false}};
+indexFiles.onchange=async e=>{const files=[...e.target.files];if(!files.length)return;try{indexAdd.disabled=true;for(let i=0;i<files.length;i++){indexStatus.textContent='Indexing '+(i+1)+' / '+files.length+'…';const emb=await embedFile(files[i]);const bmp=await createImageBitmap(files[i]);const fp=await imageFingerprints(bmp);if(bmp.close)bmp.close();await putIndex({name:files[i].name,size:files[i].size,type:files[i].type,blob:files[i],embedding:emb,phash:fp.phash,dhash:fp.dhash,ahash:fp.ahash,created:new Date().toISOString()})}const n=(await allIndex()).length;indexStatus.textContent=n+' reference image'+(n===1?'':'s')+' indexed locally.';indexSearch.disabled=!f}catch(e){console.error(e);indexStatus.textContent='Indexing failed: '+(e.message||e)}finally{indexAdd.disabled=false;indexFiles.value=''}};
+indexSearch.onclick=async()=>{if(!f)return;try{indexSearch.disabled=true;indexStatus.textContent='Computing query embedding…';queryEmbedding=await embedFile(f);const qb=await createImageBitmap(f);const qfp=await imageFingerprints(qb);if(qb.close)qb.close();const query={embedding:queryEmbedding,phash:qfp.phash,dhash:qfp.dhash};const items=await allIndex();const ranked=items.map(x=>({...x,...combinedSimilarity(x,query)})).sort((a,b)=>b.score-a.score).slice(0,24);renderRanked(ranked);indexStatus.textContent=ranked.length?'Multi-stage CLIP + pHash + dHash ranking complete.':'Index is empty.'}catch(e){console.error(e);indexStatus.textContent='Local search failed: '+(e.message||e)}finally{indexSearch.disabled=false}};
 indexClear.onclick=async()=>{await clearIndex();indexResults.innerHTML='';indexStatus.textContent='Local index cleared.';indexSearch.disabled=true};
 (async()=>{try{const n=(await allIndex()).length;if(n){indexStatus.textContent=n+' reference image'+(n===1?'':'s')+' indexed locally.';indexSearch.disabled=!f}}catch(e){}})();
