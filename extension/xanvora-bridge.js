@@ -1,1 +1,0 @@
-(()=>{if(window.__XANVORA_LIVE_BRIDGE__)return;window.__XANVORA_LIVE_BRIDGE__=true;const send=p=>window.postMessage({source:"xanvora-live-bridge",...p},"*");chrome.runtime.onMessage.addListener(m=>{if(m?.type==="XANVORA_LIVE_RESULTS")send(m)});send({type:"XANVORA_BRIDGE_READY",message:"Xanvora Live Bridge connected."});})();
