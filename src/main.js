@@ -47,7 +47,25 @@ async function fallbackHash(buffer){
  return [a,b,c,d].map(v=>v.toString(16).padStart(8,'0')).join('');
 }
 
-searchBtn.onclick=async()=>{if(!f)return;q('#step-search').textContent='prepared';q('#step-context').textContent='ready';status.textContent='Building local intelligence — no API required.';research.hidden=false;await buildIntelligence();routes.innerHTML='';const query=(evidence.ocr||'').trim();const items=[]; if(query){const text=encodeURIComponent(query.slice(0,500));items.push(['Google Images','Search text actually extracted from the image','https://www.google.com/search?tbm=isch&q='+text],['Bing Images','Search text actually extracted from the image','https://www.bing.com/images/search?q='+text]);} items.push(['Google Lens','Open Lens and upload the image manually for true visual matching','https://lens.google.com/'],['TinEye','Open reverse-image search and upload the image manually','https://tineye.com/']);for(const [name,desc,url] of items){const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='route';a.innerHTML='<strong>'+name+'</strong><span>'+desc+'</span>';routes.appendChild(a)}};
+searchBtn.onclick=async()=>{
+ if(!f)return;
+ q('#step-search').textContent='prepared';
+ q('#step-context').textContent='evidence only';
+ status.textContent='Building local intelligence — no filename-based web search.';
+ research.hidden=false;
+ await buildIntelligence();
+ routes.innerHTML='';
+ const items=[
+  ['Google Lens','Manual upload only — true visual matching is performed by Google Lens, not by a filename query.','https://lens.google.com/'],
+  ['TinEye','Manual upload only — reverse-image search.','https://tineye.com/']
+ ];
+ for(const [name,desc,url] of items){
+  const a=document.createElement('a');
+  a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='route';
+  a.innerHTML='<strong>'+name+'</strong><span>'+desc+'</span>';
+  routes.appendChild(a);
+ }
+};
 copyBtn.onclick=async()=>{const report=['XANVORA — LOCAL EVIDENCE','File: '+evidence.name,'Type: '+evidence.type,'Size: '+(evidence.size/1024/1024).toFixed(2)+' MB','Dimensions: '+evidence.width+' × '+evidence.height,'SHA-256: '+evidence.sha256,'Mode: API-free / browser-local analysis'].join('\n');await navigator.clipboard.writeText(report);status.textContent='Evidence summary copied to clipboard.'};
 async function perceptualHash(img){const size=32,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,size,size);const p=ctx.getImageData(0,0,size,size).data;const gray=[];for(let i=0;i<p.length;i+=4)gray.push(.299*p[i]+.587*p[i+1]+.114*p[i+2]);const avg=gray.reduce((a,b)=>a+b,0)/gray.length;return gray.map(v=>v>=avg?'1':'0').join('')}
 async function buildIntelligence(){
