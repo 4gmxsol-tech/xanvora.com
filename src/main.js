@@ -51,29 +51,51 @@ searchBtn.onclick=async()=>{
  if(!f)return;
  q('#step-search').textContent='prepared';
  q('#step-context').textContent='evidence only';
- status.textContent='Building local intelligence — no filename-based web search.';
+ status.textContent='Preparing local image intelligence — no filename search.';
  research.hidden=false;
  await buildIntelligence();
  routes.innerHTML='';
  const items=[
-  ['Google Lens','Manual upload only — true visual matching is performed by Google Lens, not by a filename query.','https://lens.google.com/'],
-  ['TinEye','Manual upload only — reverse-image search.','https://tineye.com/']
+  ['Google Lens','Paste the copied image for true visual matching','https://lens.google.com/'],
+  ['Yandex Images','Paste/upload the copied image for reverse-image search','https://yandex.com/images/'],
+  ['Bing Visual Search','Paste/upload the copied image for visual search','https://www.bing.com/visualsearch'],
+  ['TinEye','Paste/upload the copied image for reverse-image search','https://tineye.com/']
  ];
  for(const [name,desc,url] of items){
-  const a=document.createElement('a');
-  a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='route';
+  const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='route';
   a.innerHTML='<strong>'+name+'</strong><span>'+desc+'</span>';
   routes.appendChild(a);
  }
 };
+
+q('#copy-image').onclick=async()=>{
+ try{
+  if(!navigator.clipboard||!window.ClipboardItem)throw new Error('Image clipboard is not supported by this browser');
+  const blob=f;
+  await navigator.clipboard.write([new ClipboardItem({[blob.type]:blob})]);
+  q('#copy-status').textContent='Image copied. Open a search engine below and paste (Ctrl+V / long-press Paste).';
+ }catch(e){q('#copy-status').textContent='Copy failed: '+(e.message||e)+'. Use the engine upload button instead.'}
+};
 copyBtn.onclick=async()=>{const report=['XANVORA — LOCAL EVIDENCE','File: '+evidence.name,'Type: '+evidence.type,'Size: '+(evidence.size/1024/1024).toFixed(2)+' MB','Dimensions: '+evidence.width+' × '+evidence.height,'SHA-256: '+evidence.sha256,'Mode: API-free / browser-local analysis'].join('\n');await navigator.clipboard.writeText(report);status.textContent='Evidence summary copied to clipboard.'};
 async function perceptualHash(img){const size=32,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,size,size);const p=ctx.getImageData(0,0,size,size).data;const gray=[];for(let i=0;i<p.length;i+=4)gray.push(.299*p[i]+.587*p[i+1]+.114*p[i+2]);const avg=gray.reduce((a,b)=>a+b,0)/gray.length;return gray.map(v=>v>=avg?'1':'0').join('')}
+
+async function imageFingerprints(img){
+ const size=32,c=document.createElement('canvas');c.width=size;c.height=size;
+ const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,size,size);
+ const p=ctx.getImageData(0,0,size,size).data;
+ const g=[];for(let i=0;i<p.length;i+=4)g.push(.299*p[i]+.587*p[i+1]+.114*p[i+2]);
+ const avg=g.reduce((a,b)=>a+b,0)/g.length;
+ const ahash=g.map(v=>v>=avg?'1':'0').join('');
+ let dhash='';for(let y=0;y<32;y++)for(let x=0;x<31;x++)dhash+=g[y*32+x]>g[y*32+x+1]?'1':'0';
+ const small=32;let phash=g.map(v=>v);
+ return {ahash,dhash,phash:phash.map(v=>v>=avg?'1':'0').join('')};
+}
 async function buildIntelligence(){
  intel.innerHTML='';
  const rows=[];
  rows.push(['Dimensions',evidence.width+' × '+evidence.height]);
  rows.push(['Aspect ratio',(evidence.width/evidence.height).toFixed(3)]);
- rows.push(['SHA-256',evidence.sha256]); rows.push(['Perceptual hash',evidence.phash]);
+ rows.push(['SHA-256',evidence.sha256]); const fps=await imageFingerprints(await createImageBitmap(f)); evidence.ahash=fps.ahash; evidence.dhash=fps.dhash; evidence.phash=fps.phash; rows.push(['aHash',fps.ahash]); rows.push(['dHash',fps.dhash]); rows.push(['pHash',fps.phash]); const fp=q('#fingerprints'); fp.innerHTML='<div class="intel-row"><small>aHash</small><span>'+fps.ahash+'</span></div><div class="intel-row"><small>dHash</small><span>'+fps.dhash+'</span></div><div class="intel-row"><small>pHash</small><span>'+fps.phash+'</span></div>';
  rows.push(['Filename',evidence.name]);
  rows.push(['MIME',evidence.type]);
  rows.push(['Size',(evidence.size/1024).toFixed(1)+' KB']);
