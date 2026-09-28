@@ -1,6 +1,6 @@
 const q=s=>document.querySelector(s);
 const file=q('#file'),empty=q('#empty'),picked=q('#picked'),preview=q('#preview'),results=q('#results');
-const searchBtn=q('#search'),status=q('#search-status'),research=q('#research'),routes=q('#routes'),copyBtn=q('#copy-report');
+const searchBtn=q('#search'),status=q('#search-status'),research=q('#research'),routes=q('#routes'),copyBtn=q('#copy-report'),intel=q('#intel');
 let f=null,evidence={};
 q('#choose').onclick=()=>file.click(); q('#drop').classList.add('dropzone'); file.onchange=e=>set(e.target.files[0]);
 function set(x){if(!x||!x.type.startsWith('image/'))return;f=x;preview.src=URL.createObjectURL(x);q('#name').textContent=x.name;q('#size').textContent=(x.size/1024/1024).toFixed(2)+' MB';q('#filetype').textContent=x.type;q('#filesize').textContent=(x.size/1024/1024).toFixed(2)+' MB';empty.hidden=true;picked.hidden=false}
@@ -47,5 +47,50 @@ async function fallbackHash(buffer){
  return [a,b,c,d].map(v=>v.toString(16).padStart(8,'0')).join('');
 }
 
-searchBtn.onclick=()=>{if(!f)return;q('#step-search').textContent='prepared';q('#step-context').textContent='ready';status.textContent='No API was used. Choose a public search route below; the image stays in your browser unless you upload it yourself to a selected service.';research.hidden=false;routes.innerHTML='';const text=encodeURIComponent(evidence.name||'image');const items=[['Google Images','Search image-related web results','https://www.google.com/search?tbm=isch&q='+text],['Bing Images','Search visual/image results','https://www.bing.com/images/search?q='+text],['Google Lens','Open the public Lens entry point','https://lens.google.com/'],['TinEye','Open reverse-image search','https://tineye.com/']];for(const [name,desc,url] of items){const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='route';a.innerHTML='<strong>'+name+'</strong><span>'+desc+'</span>';routes.appendChild(a)}};
+searchBtn.onclick=async()=>{if(!f)return;q('#step-search').textContent='prepared';q('#step-context').textContent='ready';status.textContent='Building local intelligence — no API required.';research.hidden=false;await buildIntelligence();routes.innerHTML='';const text=encodeURIComponent((evidence.ocr||evidence.name||'image').slice(0,500));const items=[['Google Images','Search image-related web results','https://www.google.com/search?tbm=isch&q='+text],['Bing Images','Search visual/image results','https://www.bing.com/images/search?q='+text],['Google Lens','Open the public Lens entry point','https://lens.google.com/'],['TinEye','Open reverse-image search','https://tineye.com/']];for(const [name,desc,url] of items){const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='route';a.innerHTML='<strong>'+name+'</strong><span>'+desc+'</span>';routes.appendChild(a)}};
 copyBtn.onclick=async()=>{const report=['XANVORA — LOCAL EVIDENCE','File: '+evidence.name,'Type: '+evidence.type,'Size: '+(evidence.size/1024/1024).toFixed(2)+' MB','Dimensions: '+evidence.width+' × '+evidence.height,'SHA-256: '+evidence.sha256,'Mode: API-free / browser-local analysis'].join('\n');await navigator.clipboard.writeText(report);status.textContent='Evidence summary copied to clipboard.'};
+async function buildIntelligence(){
+ intel.innerHTML='';
+ const rows=[];
+ rows.push(['Dimensions',evidence.width+' × '+evidence.height]);
+ rows.push(['Aspect ratio',(evidence.width/evidence.height).toFixed(3)]);
+ rows.push(['SHA-256',evidence.sha256]);
+ rows.push(['Filename',evidence.name]);
+ rows.push(['MIME',evidence.type]);
+ rows.push(['Size',(evidence.size/1024).toFixed(1)+' KB']);
+ const exif=await readExif(f);
+ if(exif) rows.push(['EXIF',exif]);
+ let ocr='Not available in this zero-API build.';
+ try{ocr=await localOCR(f)}catch(e){}
+ evidence.ocr=ocr;
+ rows.push(['OCR',ocr||'No text detected']);
+ for(const [k,v] of rows){
+  const d=document.createElement('div');d.className='intel-row';
+  d.innerHTML='<small>'+k+'</small><span>'+escapeHtml(String(v))+'</span>';
+  intel.appendChild(d);
+ }
+}
+async function localOCR(input){
+ if('TextDetector' in window){
+  const bmp=await createImageBitmap(input);
+  const detector=new TextDetector();
+  const blocks=await detector.detect(bmp);
+  return blocks.map(x=>x.rawValue||'').filter(Boolean).join(' ').trim();
+ }
+ return '';
+}
+async function readExif(input){
+ if(!input.arrayBuffer)return '';
+ const b=new Uint8Array(await input.arrayBuffer());
+ if(b[0]!==255||b[1]!==216)return '';
+ for(let i=2;i<b.length-4;){
+  if(b[i]!==255){i++;continue}
+  const marker=b[i+1],len=(b[i+2]<<8)|b[i+3];
+  if(marker===225&&b[i+4]===69&&b[i+5]===120&&b[i+6]===105&&b[i+7]===102){
+   return 'EXIF metadata present (details intentionally kept local)';
+  }
+  if(len<2)break;i+=2+len;
+ }
+ return 'No EXIF segment detected';
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
