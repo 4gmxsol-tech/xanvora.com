@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Xanvora Live Bridge",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Streams visible reverse-image search results into Xanvora.",
   "permissions": [
     "tabs",
@@ -25,16 +25,6 @@
       "js": [
         "xanvora-bridge.js",
         "live-screen.js"
-      ],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "https://yandex.com/images/*",
-        "https://yandex.ru/images/*"
-      ],
-      "js": [
-        "yandex-collector.js"
       ],
       "run_at": "document_idle"
     }
