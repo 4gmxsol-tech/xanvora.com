@@ -2,3 +2,5 @@
 .local-tools{display:flex;gap:10px;flex-wrap:wrap}.route{display:flex;flex-direction:column;gap:4px;padding:14px;margin-top:8px;border:1px solid rgba(255,255,255,.12);border-radius:12px;text-decoration:none}.route span{opacity:.65;font-size:.85rem}.route strong{color:inherit}#routes{display:grid;gap:4px;margin-top:12px}
 
 #intel{display:grid;gap:6px;margin:12px 0 18px}.intel-row{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}.intel-row small{opacity:.55;text-transform:uppercase}.intel-row span{overflow-wrap:anywhere}
+
+.local-index{margin-top:24px;padding:22px;border:1px solid rgba(255,255,255,.1);border-radius:16px}.local-index p{opacity:.7}.local-index .match{display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}.local-index .match span{opacity:.7}.local-index h3{margin-top:18px}
