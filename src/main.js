@@ -96,36 +96,20 @@ q('#copy-image').onclick=async()=>{
 copyBtn.onclick=async()=>{const report=['XANVORA — LOCAL EVIDENCE','File: '+evidence.name,'Type: '+evidence.type,'Size: '+(evidence.size/1024/1024).toFixed(2)+' MB','Dimensions: '+evidence.width+' × '+evidence.height,'SHA-256: '+evidence.sha256,'Mode: API-free / browser-local analysis'].join('\n');await navigator.clipboard.writeText(report);status.textContent='Evidence summary copied to clipboard.'};
 async function perceptualHash(img){const size=32,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,size,size);const p=ctx.getImageData(0,0,size,size).data;const gray=[];for(let i=0;i<p.length;i+=4)gray.push(.299*p[i]+.587*p[i+1]+.114*p[i+2]);const avg=gray.reduce((a,b)=>a+b,0)/gray.length;return gray.map(v=>v>=avg?'1':'0').join('')}
 
+let fingerprintWorker=null;
+function getFingerprintWorker(){if(!('Worker' in window))return null;if(!fingerprintWorker)fingerprintWorker=new Worker('./src/fingerprint-worker.js');return fingerprintWorker}
 async function imageFingerprints(img){
  const size=32,c=document.createElement('canvas');c.width=size;c.height=size;
  const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,size,size);
- const p=ctx.getImageData(0,0,size,size).data;
- const g=[];for(let i=0;i<p.length;i+=4)g.push(.299*p[i]+.587*p[i+1]+.114*p[i+2]);
- const avg=g.reduce((a,b)=>a+b,0)/g.length;
- const ahash=g.map(v=>v>=avg?'1':'0').join('');
- let dhash='';for(let y=0;y<32;y++)for(let x=0;x<31;x++)dhash+=g[y*32+x]>g[y*32+x+1]?'1':'0';
-
- // True pHash: 32×32 grayscale -> 8×8 low-frequency 2D DCT -> median threshold.
- const N=32, K=8, coeff=[];
- for(let u=0;u<K;u++){
-  for(let v=0;v<K;v++){
-   let sum=0;
-   for(let x=0;x<N;x++)for(let y=0;y<N;y++){
-    sum+=g[y*N+x]*
-      Math.cos(((2*x+1)*u*Math.PI)/(2*N))*
-      Math.cos(((2*y+1)*v*Math.PI)/(2*N));
-   }
-   const au=u===0?Math.sqrt(1/N):Math.sqrt(2/N);
-   const av=v===0?Math.sqrt(1/N):Math.sqrt(2/N);
-   coeff.push(au*av*sum);
-  }
+ const pixels=ctx.getImageData(0,0,size,size).data;
+ const worker=getFingerprintWorker();
+ if(!worker){
+  const g=[];for(let i=0;i<pixels.length;i+=4)g.push(.299*pixels[i]+.587*pixels[i+1]+.114*pixels[i+2]);
+  const avg=g.reduce((a,b)=>a+b,0)/g.length,ahash=g.map(v=>v>=avg?'1':'0').join('');
+  let dhash='';for(let y=0;y<32;y++)for(let x=0;x<31;x++)dhash+=g[y*32+x]>g[y*32+x+1]?'1':'0';
+  const coeff=[];for(let u=0;u<8;u++)for(let v=0;v<8;v++){let sum=0;for(let x=0;x<32;x++)for(let y=0;y<32;y++)sum+=g[y*32+x]*Math.cos(((2*x+1)*u*Math.PI)/64)*Math.cos(((2*y+1)*v*Math.PI)/64);coeff.push((u?Math.sqrt(2/32):Math.sqrt(1/32))*(v?Math.sqrt(2/32):Math.sqrt(1/32))*sum)}const ac=coeff.slice(1).sort((a,b)=>a-b),m=ac[Math.floor(ac.length/2)];return{ahash,dhash,phash:coeff.map((v,i)=>i===0?(coeff[0]>=m?'1':'0'):(v>=m?'1':'0')).join('')};
  }
- const dc=coeff[0];
- const ac=coeff.slice(1);
- const sorted=[...ac].sort((a,b)=>a-b);
- const median=sorted[Math.floor(sorted.length/2)];
- const phash=coeff.map((v,i)=>i===0?dc>=median?'1':'0':v>=median?'1':'0').join('');
- return {ahash,dhash,phash};
+ return new Promise((resolve,reject)=>{const done=e=>{worker.removeEventListener('message',done);worker.removeEventListener('error',fail);if(e.data?.type==='error')reject(new Error(e.data.message));else resolve(e.data)};const fail=e=>{worker.removeEventListener('message',done);worker.removeEventListener('error',fail);reject(e.error||new Error('Fingerprint worker failed'))};worker.addEventListener('message',done);worker.addEventListener('error',fail);worker.postMessage({type:'fingerprints',pixels,width:32,height:32})});
 }
 async function buildIntelligence(){
  intel.innerHTML='';
