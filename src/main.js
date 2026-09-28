@@ -19,7 +19,7 @@ q('#analyze').onclick=async()=>{
    hash=await fallbackHash(buf);
   }
   const img=await createImageBitmap(f);
-  evidence={name:f.name,type:f.type,size:f.size,width:img.width,height:img.height,sha256:hash};
+  const phash=await perceptualHash(img); evidence={name:f.name,type:f.type,size:f.size,width:img.width,height:img.height,sha256:hash,phash};
   q('#hash').textContent=hash.slice(0,16)+'…';
   q('#step-fingerprint').textContent='complete';
   q('#step-search').textContent='browser ready';
@@ -47,14 +47,15 @@ async function fallbackHash(buffer){
  return [a,b,c,d].map(v=>v.toString(16).padStart(8,'0')).join('');
 }
 
-searchBtn.onclick=async()=>{if(!f)return;q('#step-search').textContent='prepared';q('#step-context').textContent='ready';status.textContent='Building local intelligence — no API required.';research.hidden=false;await buildIntelligence();routes.innerHTML='';const text=encodeURIComponent((evidence.ocr||evidence.name||'image').slice(0,500));const items=[['Google Images','Search image-related web results','https://www.google.com/search?tbm=isch&q='+text],['Bing Images','Search visual/image results','https://www.bing.com/images/search?q='+text],['Google Lens','Open the public Lens entry point','https://lens.google.com/'],['TinEye','Open reverse-image search','https://tineye.com/']];for(const [name,desc,url] of items){const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='route';a.innerHTML='<strong>'+name+'</strong><span>'+desc+'</span>';routes.appendChild(a)}};
+searchBtn.onclick=async()=>{if(!f)return;q('#step-search').textContent='prepared';q('#step-context').textContent='ready';status.textContent='Building local intelligence — no API required.';research.hidden=false;await buildIntelligence();routes.innerHTML='';const query=(evidence.ocr||'').trim();const items=[]; if(query){const text=encodeURIComponent(query.slice(0,500));items.push(['Google Images','Search text actually extracted from the image','https://www.google.com/search?tbm=isch&q='+text],['Bing Images','Search text actually extracted from the image','https://www.bing.com/images/search?q='+text]);} items.push(['Google Lens','Open Lens and upload the image manually for true visual matching','https://lens.google.com/'],['TinEye','Open reverse-image search and upload the image manually','https://tineye.com/']);for(const [name,desc,url] of items){const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.className='route';a.innerHTML='<strong>'+name+'</strong><span>'+desc+'</span>';routes.appendChild(a)}};
 copyBtn.onclick=async()=>{const report=['XANVORA — LOCAL EVIDENCE','File: '+evidence.name,'Type: '+evidence.type,'Size: '+(evidence.size/1024/1024).toFixed(2)+' MB','Dimensions: '+evidence.width+' × '+evidence.height,'SHA-256: '+evidence.sha256,'Mode: API-free / browser-local analysis'].join('\n');await navigator.clipboard.writeText(report);status.textContent='Evidence summary copied to clipboard.'};
+async function perceptualHash(img){const size=32,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0,size,size);const p=ctx.getImageData(0,0,size,size).data;const gray=[];for(let i=0;i<p.length;i+=4)gray.push(.299*p[i]+.587*p[i+1]+.114*p[i+2]);const avg=gray.reduce((a,b)=>a+b,0)/gray.length;return gray.map(v=>v>=avg?'1':'0').join('')}
 async function buildIntelligence(){
  intel.innerHTML='';
  const rows=[];
  rows.push(['Dimensions',evidence.width+' × '+evidence.height]);
  rows.push(['Aspect ratio',(evidence.width/evidence.height).toFixed(3)]);
- rows.push(['SHA-256',evidence.sha256]);
+ rows.push(['SHA-256',evidence.sha256]); rows.push(['Perceptual hash',evidence.phash]);
  rows.push(['Filename',evidence.name]);
  rows.push(['MIME',evidence.type]);
  rows.push(['Size',(evidence.size/1024).toFixed(1)+' KB']);
@@ -63,7 +64,7 @@ async function buildIntelligence(){
  let ocr='Not available in this zero-API build.';
  try{ocr=await localOCR(f)}catch(e){}
  evidence.ocr=ocr;
- rows.push(['OCR',ocr||'No text detected']);
+ rows.push(['OCR',ocr||'No text detected']); if(!ocr) rows.push(['Search basis','No text-derived web query. Visual search requires manual upload to a public visual-search service.']);
  for(const [k,v] of rows){
   const d=document.createElement('div');d.className='intel-row';
   d.innerHTML='<small>'+k+'</small><span>'+escapeHtml(String(v))+'</span>';
