@@ -153,12 +153,11 @@ function draw(){
  if(t==='E'){ctx.fillStyle=power?'#b2d5ae': '#693d3a';ctx.fillRect(x+.12,y+.1,.76,.8);ctx.fillStyle='#0c1112';ctx.fillRect(x+.23,y+.18,.54,.64);ctx.fillStyle=power?'#b2d5ae':'#b24c44';ctx.fillRect(x+.68,y+.47,.06,.06);if(hasKey&&hasFuse&&power){ctx.fillStyle='#b2d5ae';ctx.fillRect(x+.28,y+.25,.44,.035);}}
  }
  }
- // Dim ambient; flashlight is a radial pool centered on player.
- ctx.fillStyle='#020405b8';ctx.fillRect(camX,camY,visW,visH);
- var px=player.x,py=player.y,light=ctx.createRadialGradient(px,py,.4,px,py,battery>0?5.1:1.8);
- light.addColorStop(0,'#ffffffed');light.addColorStop(.22,'#e4e8d94f');light.addColorStop(.65,'#b9c5b10e');light.addColorStop(1,'#00000000');
- ctx.globalCompositeOperation='destination-out';ctx.fillStyle=light;ctx.beginPath();ctx.arc(px,py,battery>0?5.1:1.8,0,Math.PI*2);ctx.fill();ctx.globalCompositeOperation='source-over';
- // Reveal lit floor with a subtle warm tint, then draw characters above darkness.
+ // Radial darkness: keep the map intact while the flashlight fades into the shadows.
+ var px=player.x,py=player.y,light=ctx.createRadialGradient(px,py,.45,px,py,battery>0?5.7:2.2);
+ light.addColorStop(0,'#02040508');light.addColorStop(.22,'#02040518');light.addColorStop(.48,'#02040570');light.addColorStop(.78,'#020405c9');light.addColorStop(1,'#020405ed');
+ ctx.fillStyle=light;ctx.fillRect(camX,camY,visW,visH);
+ // A faint pool of reflected light around the player.
  function glow(x,y,r,color){var g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'#00000000');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
  glow(player.x,player.y,2.8,'#b7c9a008');
  function drawActor(m,isPlayer){
