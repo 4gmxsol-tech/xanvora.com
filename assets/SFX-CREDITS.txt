@@ -1,0 +1,21 @@
+RIFTBOUND: WILDSHIFT — AUDIO ASSET NOTES
+
+The following sampled sound effects are loaded from the Open Game SFX Index:
+https://github.com/Mcamento8/open-game-sfx-index
+
+The index identifies its audio assets as CC0 1.0 Universal (public domain), sourced from Kenney.nl packs. No attribution is required; this file records provenance for maintainability.
+
+- Laser shot: sci-fi-sounds/laserSmall_001.ogg
+  Source pack: https://kenney.nl/assets/sci-fi-sounds
+- Combat impact: impact-sounds/impactPunch_heavy_001.ogg
+  Source pack: https://kenney.nl/assets/impact-sounds
+- Shard pickup: interface-sounds/glass_001.ogg
+  Source pack: https://kenney.nl/assets/interface-sounds
+- Dash: sci-fi-sounds/forceField_000.ogg
+  Source pack: https://kenney.nl/assets/sci-fi-sounds
+- Rift pulse: sci-fi-sounds/explosionCrunch_002.ogg
+  Source pack: https://kenney.nl/assets/sci-fi-sounds
+- Level-up cue: music-jingles/jingles_NES12.ogg
+  Source pack: https://kenney.nl/assets/music-jingles
+
+Runtime audio is fetched from raw.githubusercontent.com. If a sample is unavailable or blocked, the game falls back to its generated sound effect.
