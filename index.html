@@ -190,5 +190,6 @@ document.getElementById('menu-btn').addEventListener('click',function(){state='m
 document.getElementById('end-action').addEventListener('click',restart);
 generate();state='menu';resize();requestAnimationFrame(function(t){last=t;requestAnimationFrame(frame);});
 })();
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}
 </script>
 </body></html>
