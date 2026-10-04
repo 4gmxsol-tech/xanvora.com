@@ -162,7 +162,7 @@ function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.ima
  ctx.fillStyle='#a8b8d6';ctx.fillRect(flag.x,flag.y,5,groundY-flag.y);ctx.fillStyle='#fff';ctx.fillRect(flag.x-3,flag.y-3,11,7);ctx.fillStyle='#ff5145';ctx.beginPath();ctx.moveTo(flag.x+5,flag.y+8);ctx.lineTo(flag.x+48,flag.y+22);ctx.lineTo(flag.x+5,flag.y+37);ctx.closePath();ctx.fill();ctx.fillStyle='#ffe66b';ctx.fillRect(goalX-14,groundY-12,32,12);
  // Animated original Xanvora hero, rendered from the four-frame sprite sheet.
  if(player&&!(player.invuln>0&&Math.floor(performance.now()/80)%2===0)){
-  ctx.save();if(player.face<0){ctx.translate(player.x*2+player.w,0);ctx.scale(-1,1);ctx.translate(-player.x,0)}
+  ctx.save();if(player.face<0){ctx.translate(player.x+player.w/2,0);ctx.scale(-1,1);ctx.translate(-(player.x+player.w/2),0)}
   const frame=heroFrame();ctx.drawImage(heroSheet,frame*32,0,32,40,player.x-4,player.y-5,31,39);ctx.restore();
  }
  for(const a of particles){ctx.globalAlpha=clamp(a.life/a.max,0,1);ctx.fillStyle=a.color;ctx.fillRect(a.x,a.y,a.size,a.size)}ctx.globalAlpha=1;ctx.restore();
