@@ -187,7 +187,6 @@ document.getElementById('sound-btn').addEventListener('click',function(){soundOn
 document.getElementById('resume-btn').addEventListener('click',function(){state='playing';pauseScreen.classList.add('hidden');last=performance.now();});
 document.getElementById('restart-btn').addEventListener('click',restart);
 document.getElementById('menu-btn').addEventListener('click',function(){state='menu';endScreen.classList.add('hidden');pauseScreen.classList.add('hidden');titleScreen.classList.remove('hidden');hud.classList.remove('active');});
-document.getElementById('end-action').addEventListener('click',restart);
 generate();state='menu';resize();requestAnimationFrame(function(t){last=t;requestAnimationFrame(frame);});
 })();
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}
