@@ -152,7 +152,7 @@ function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.ima
 }
 function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}
 function pressHold(id,key){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();touch[key]=true;el.setPointerCapture?.(e.pointerId)});const up=e=>{touch[key]=false};el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up)}
-pressHold('left','left');pressHold('right','right');function requestJump(e){if(e)e.preventDefault();jumpQueued=true;jumpBuffer=.32;if(player&&(player.onGround||player.coyote>0)&&mode==='play'){player.vy=-650;player.onGround=false;player.coyote=0;jumpQueued=false;jumpBuffer=0;sfx(520,.10,'square',.03)}}const jumpBtn=$('jump');jumpBtn.addEventListener('pointerdown',requestJump,{passive:false});jumpBtn.addEventListener('touchstart',requestJump,{passive:false});jumpBtn.addEventListener('click',e=>{if(mode==='play')requestJump(e)});$('start').onclick=start;$('retry').onclick=start;$('again').onclick=start;$('musicToggle').onclick=toggleMusic;
+pressHold('left','left');pressHold('right','right');function requestJump(e){if(e)e.preventDefault();jumpQueued=true;jumpBuffer=.32;if(player&&(player.onGround||player.coyote>0)&&mode==='play'){player.vy=-650;player.onGround=false;player.coyote=0;jumpQueued=false;jumpBuffer=0;sfx(520,.10,'square',.03)}}const jumpBtn=$('jump');jumpBtn.addEventListener('pointerdown',requestJump,{passive:false});$('start').onclick=start;$('retry').onclick=start;$('again').onclick=start;$('musicToggle').onclick=toggleMusic;
 resize();buildLevel(true);requestAnimationFrame(loop);
 })();
 </script></body></html>
