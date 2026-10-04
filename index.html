@@ -55,7 +55,7 @@
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
-let W=800,H=450,dpr=1,mode='menu',last=0,accumulator=0,cam=0,score=0,coins=0,lives=3,timeLeft=400,timerAcc=0,touch={left:false,right:false},jumpQueued=false,jumpBuffer=0,jumpHeld=false,player,solids=[],blocks=[],coinItems=[],gems=[],hazards=[],enemies=[],particles=[],flag,goalX=0,groundY=400,audio=null,soundOn=true,musicOn=true,musicTimer=null,musicStep=0,stompChain=0,stompTimer=0,landDust=0;
+let W=800,H=450,dpr=1,mode='menu',last=0,accumulator=0,cam=0,score=0,coins=0,lives=3,timeLeft=400,timerAcc=0,touch={left:false,right:false},jumpQueued=false,jumpBuffer=0,jumpHeld=false,player,solids=[],blocks=[],coinItems=[],gems=[],hazards=[],enemies=[],particles=[],flag,goalX=0,groundY=400,checkpointX=55,checkpointActive=false,audio=null,soundOn=true,musicOn=true,musicTimer=null,musicStep=0,stompChain=0,stompTimer=0,landDust=0;
 const FIXED_DT=1/120;
 const TILE=32,LEVEL_W=3000,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a);
 function ensureAudio(){try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();return audio}catch(e){return null}}
@@ -72,7 +72,7 @@ function addSolid(x,y,w,h,kind='ground'){solids.push({x,y,w,h,kind})}
 function addBlock(x,above,kind='brick',content='coin'){blocks.push({x,y:groundY-above,w:TILE,h:TILE,kind,content,used:false,bump:0})}
 function addCoin(x,above){coinItems.push({x,y:groundY-above,r:8,got:false,phase:rand(0,6)})}
 function addEnemy(x){enemies.push({x,y:groundY-26,w:25,h:24,vx:-42,vy:0,alive:true,phase:rand(0,6),squash:0})}
-function buildLevel(resetPlayer=true){solids=[];blocks=[];coinItems=[];gems=[];hazards=[];enemies=[];particles=[];stompChain=0;stompTimer=0;groundY=H-44;
+function buildLevel(resetPlayer=true){solids=[];blocks=[];coinItems=[];gems=[];hazards=[];enemies=[];particles=[];stompChain=0;stompTimer=0;checkpointX=55;checkpointActive=false;groundY=H-44;
  // Continuous ground with deliberate pits.
  let x=0;const pits=[[470,565],[990,1085],[1580,1680],[2210,2310]];
  for(let i=0;i<pits.length;i++){const [a,b]=pits[i];if(a>x)addSolid(x,groundY, a-x,120,'ground');x=b}if(x<LEVEL_W)addSolid(x,groundY,LEVEL_W-x,120,'ground');
@@ -92,7 +92,7 @@ function buildLevel(resetPlayer=true){solids=[];blocks=[];coinItems=[];gems=[];h
  // New hazards and bonus crystals add risk/reward decisions to the route.
  [[430,1],[760,2],[945,1],[1150,2],[1540,2],[1885,1],[2075,2],[2550,2],[2690,1]].forEach(([hx,count])=>hazards.push({x:hx,y:groundY-18,w:count*24,h:18,count}));
  [[420,78],[785,118],[1115,84],[1410,120],[1645,80],[1900,82],[2180,115],[2585,82],[2720,100]].forEach(([gx,gy],i)=>gems.push({x:gx,y:groundY-gy,r:10,got:false,phase:i*.8}));
- goalX=LEVEL_W-125;flag={x:goalX,y:groundY-230};
+ goalX=LEVEL_W-125;flag={x:goalX,y:groundY-230};checkpointX=1500;
  if(resetPlayer){player={x:55,y:groundY-40,prevY:groundY-40,w:23,h:31,vx:0,vy:0,onGround:false,coyote:0.12,face:1,invuln:0,dead:false};cam=0}
 }
 function start(){score=0;coins=0;lives=3;timeLeft=400;timerAcc=0;accumulator=0;jumpQueued=false;jumpBuffer=0;jumpHeld=false;touch.left=touch.right=false;buildLevel(true);mode='play';hideScreens(null);updateHud();startMusic();sfx(660,.12)}
@@ -100,7 +100,7 @@ function updateHud(){$('score').textContent=String(score).padStart(6,'0');$('coi
 function burst(x,y,color,n=8){for(let i=0;i<n;i++){const a=rand(0,Math.PI*2),s=rand(35,150);particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(.2,.55),max:.55,color,size:rand(2,4)})}}
 function getRects(){return [...solids,...blocks.map(b=>({x:b.x,y:b.y-(b.bump>0?Math.sin(b.bump*Math.PI)*7:0),w:b.w,h:b.h,ref:b,kind:b.kind}))]}
 function overlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
-function die(){if(player.invuln>0)return;lives--;updateHud();sfx(140,.22,'sawtooth',.04);if(lives<=0){mode='dead';$('deadText').textContent='Score '+String(score).padStart(6,'0')+' · Coins '+coins+'. Give it another go!';hideScreens('dead');return}player.x=Math.max(35,player.x-90);player.y=groundY-90;player.vx=0;player.vy=0;player.invuln=1.7;cam=Math.max(0,player.x-W*.32)}
+function die(){if(player.invuln>0)return;lives--;updateHud();sfx(140,.22,'sawtooth',.04);if(lives<=0){mode='dead';$('deadText').textContent='Score '+String(score).padStart(6,'0')+' · Coins '+coins+'. Give it another go!';hideScreens('dead');return}player.x=checkpointActive?checkpointX:Math.max(35,player.x-90);player.y=groundY-player.h-1;player.prevY=player.y;player.vx=0;player.vy=0;player.onGround=true;player.coyote=.12;player.invuln=1.7;jumpQueued=false;jumpBuffer=0;cam=clamp(player.x-W*.32,0,LEVEL_W-W)}
 function collectCoin(c){if(c.got)return;c.got=true;coins++;score+=200;burst(c.x,c.y,'#ffe46b',7);sfx(920,.07,'square',.02);updateHud()}
 function collectGem(g){if(g.got)return;g.got=true;score+=750;burst(g.x,g.y,'#62f4e4',12);sfx(1120,.14,'triangle',.035);updateHud()}
 function bumpBlock(b){if(b.used&&b.kind==='question')return;b.bump=1;if(b.content==='coin'){score+=200;coins++;burst(b.x+16,b.y-10,'#ffe46b',8);sfx(900,.08)}else if(b.content==='mushroom'){score+=1000;burst(b.x+16,b.y-8,'#ff795f',8);sfx(600,.12)}if(b.kind==='question')b.used=true;updateHud()}
@@ -121,16 +121,20 @@ p.y+=p.vy*dt;p.onGround=false;rects=getRects();for(const r of rects){if(overlap(
 for(const b of blocks)b.bump=Math.max(0,b.bump-dt*4);
 for(const c of coinItems){c.phase+=dt*4;if(!c.got&&overlap({x:p.x-5,y:p.y-5,w:p.w+10,h:p.h+10},{x:c.x-c.r,y:c.y-c.r,w:c.r*2,h:c.r*2}))collectCoin(c)}
 for(const g of gems){g.phase+=dt*3;if(!g.got&&overlap({x:p.x-5,y:p.y-5,w:p.w+10,h:p.h+10},{x:g.x-g.r,y:g.y-g.r,w:g.r*2,h:g.r*2}))collectGem(g)}
-for(const h of hazards){if(overlap(p,{x:h.x,y:h.y,w:h.w,h:h.h})){if(p.invuln<=0)die();break}}
-for(const e of enemies){if(!e.alive)continue;e.phase+=dt*5;e.vy=Math.min(700,e.vy+1400*dt);e.x+=e.vx*dt;e.y+=e.vy*dt;
- // land on ground or solids
- for(const r of getRects()){if(overlap(e,r)){if(e.vy>0){e.y=r.y-e.h;e.vy=0}if(e.vx<0)e.x=r.x+ r.w;else if(e.vx>0)e.x=r.x-e.w;e.vx*=-1}}
+for(const h of hazards){/* Narrow hitbox follows the spike tips, not the full decorative base. */if(overlap(p,{x:h.x+3,y:h.y+5,w:h.w-6,h:h.h-5})){if(p.invuln<=0)die();break}}
+for(const e of enemies){if(!e.alive)continue;e.phase+=dt*5;const enemyRects=getRects();
+ // Resolve enemy movement on each axis independently to prevent wall/ceiling jitter.
+ e.x+=e.vx*dt;for(const r of enemyRects){if(overlap(e,r)){if(e.vx>0)e.x=r.x-e.w;else e.x=r.x+r.w;e.vx*=-1}}
+ e.vy=Math.min(700,e.vy+1400*dt);e.y+=e.vy*dt;for(const r of enemyRects){if(overlap(e,r)){if(e.vy>0){e.y=r.y-e.h;e.vy=0}else if(e.vy<0){e.y=r.y+r.h;e.vy=0}}}
+ // Turn around at unsupported edges instead of walking straight into pits.
+ if(e.vy===0){const footX=e.vx>0?e.x+e.w+3:e.x-3;const supported=enemyRects.some(r=>footX>=r.x&&footX<=r.x+r.w&&Math.abs((e.y+e.h)-r.y)<3);if(!supported)e.vx*=-1}
  if(overlap(p,e)){const prevBottom=p.prevY+p.h;if(p.vy>80&&prevBottom<=e.y+9){e.alive=false;p.vy=-405;stompChain=stompTimer>0?stompChain+1:1;stompTimer=1.25;const bonus=500*stompChain;score+=bonus;burst(e.x+e.w/2,e.y+e.h/2,'#ff8a54',9+Math.min(stompChain,5));sfx(240+stompChain*65,.09,'square',.03);updateHud()}else if(p.invuln<=0)die()}
 }
 if(p.y>H+130)die();
 stompTimer=Math.max(0,stompTimer-dt);if(stompTimer<=0)stompChain=0;landDust=Math.max(0,landDust-dt);
 for(const a of particles){a.x+=a.vx*dt;a.y+=a.vy*dt;a.vy+=260*dt;a.life-=dt}particles=particles.filter(a=>a.life>0);
 cam=clamp(p.x-W*.34,0,LEVEL_W-W);
+if(!checkpointActive&&p.x+p.w>=checkpointX){checkpointActive=true;score+=500;burst(checkpointX,groundY-34,'#72f4dc',14);sfx(760,.16,'triangle',.035);updateHud()}
 if(p.x+p.w>=goalX){mode='win';score+=Math.max(0,timeLeft)*10;updateHud();$('winText').textContent='Final score '+String(score).padStart(6,'0')+' · Coins '+coins+' · You cleared World 1-1!';hideScreens('win');sfx(780,.3,'triangle',.04)}
 }
 function cloud(x,y,s=1){ctx.fillStyle='#1b2850';ctx.fillRect(x,y,42*s,14*s);ctx.fillRect(x+9*s,y-9*s,18*s,17*s);ctx.fillRect(x+25*s,y-5*s,20*s,14*s);ctx.fillStyle='#334477';ctx.fillRect(x+4*s,y+11*s,35*s,3*s)}
@@ -172,6 +176,8 @@ function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.ima
  // Clearly readable spike traps, placed on safe ground between other challenges.
  for(const h of hazards){ctx.fillStyle='#b8c9dc';for(let i=0;i<h.count;i++){const sx=h.x+i*24;ctx.beginPath();ctx.moveTo(sx,h.y+h.h);ctx.lineTo(sx+12,h.y);ctx.lineTo(sx+24,h.y+h.h);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(sx+10,h.y+5,3,7);ctx.fillStyle='#b8c9dc'}ctx.fillStyle='#6b7e9b';ctx.fillRect(h.x,h.y+h.h-3,h.w,3)}
  for(const e of enemies){if(!e.alive)continue;ctx.fillStyle='#8e3f29';ctx.fillRect(e.x,e.y+e.h-5,e.w,5);ctx.fillStyle='#c86b42';ctx.fillRect(e.x+2,e.y+5,e.w-4,e.h-8);ctx.fillStyle='#ef9a5d';ctx.fillRect(e.x+5,e.y+2,e.w-10,7);ctx.fillStyle='#fff';ctx.fillRect(e.x+5,e.y+9,5,6);ctx.fillRect(e.x+15,e.y+9,5,6);ctx.fillStyle='#26334a';ctx.fillRect(e.x+7,e.y+11,3,4);ctx.fillRect(e.x+17,e.y+11,3,4);ctx.fillStyle='#613a32';ctx.fillRect(e.x,e.y+e.h-3,9,4);ctx.fillRect(e.x+e.w-9,e.y+e.h-3,9,4)}
+ // Mid-level checkpoint beacon: cyan when activated, amber before activation.
+ ctx.fillStyle=checkpointActive?'#75f5df':'#a8b8d6';ctx.fillRect(checkpointX,groundY-54,4,54);ctx.fillStyle=checkpointActive?'#27d7c0':'#ffd166';ctx.beginPath();ctx.moveTo(checkpointX+4,groundY-52);ctx.lineTo(checkpointX+34,groundY-43);ctx.lineTo(checkpointX+4,groundY-33);ctx.closePath();ctx.fill();ctx.fillStyle='#eafcff';ctx.fillRect(checkpointX-3,groundY-3,10,3);
  // finish flag and pole
  ctx.fillStyle='#a8b8d6';ctx.fillRect(flag.x,flag.y,5,groundY-flag.y);ctx.fillStyle='#fff';ctx.fillRect(flag.x-3,flag.y-3,11,7);ctx.fillStyle='#ff5145';ctx.beginPath();ctx.moveTo(flag.x+5,flag.y+8);ctx.lineTo(flag.x+48,flag.y+22);ctx.lineTo(flag.x+5,flag.y+37);ctx.closePath();ctx.fill();ctx.fillStyle='#ffe66b';ctx.fillRect(goalX-14,groundY-12,32,12);
  // Animated original Xanvora hero, rendered from the four-frame sprite sheet.
