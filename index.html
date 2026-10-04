@@ -101,7 +101,7 @@ function collectCoin(c){if(c.got)return;c.got=true;coins++;score+=200;burst(c.x,
 function bumpBlock(b){if(b.used&&b.kind==='question')return;b.bump=1;if(b.content==='coin'){score+=200;coins++;burst(b.x+16,b.y-10,'#ffe46b',8);sfx(900,.08)}else if(b.content==='mushroom'){score+=1000;burst(b.x+16,b.y-8,'#ff795f',8);sfx(600,.12)}if(b.kind==='question')b.used=true;updateHud()}
 function update(dt){if(mode!=='play')return;timerAcc+=dt;if(timerAcc>=1){const dec=Math.floor(timerAcc);timerAcc-=dec;timeLeft-=dec;updateHud();if(timeLeft<=0){die();return}}
 const p=player;p.prevY=p.y;p.invuln=Math.max(0,p.invuln-dt);if(p.onGround)p.coyote=.12;else p.coyote=Math.max(0,(p.coyote||0)-dt);
-const left=keys.ArrowLeft||keys.a||touch.left,right=keys.ArrowRight||keys.d||touch.right;
+const left=touch.left,right=touch.right;
 const accel=p.onGround?1900:1100,maxSpeed=205;if(left){p.vx-=accel*dt;p.face=-1}else if(right){p.vx+=accel*dt;p.face=1}else p.vx*=Math.pow(p.onGround?.0008:.16,dt);
 p.vx=clamp(p.vx,-maxSpeed,maxSpeed);
 if(jumpQueued)jumpBuffer=.32;if(jumpBuffer>0&&(p.onGround||p.coyote>0)){p.vy=-650;p.onGround=false;p.coyote=0;jumpBuffer=0;sfx(520,.10,'square',.03)}else jumpBuffer=Math.max(0,jumpBuffer-dt);jumpQueued=false
