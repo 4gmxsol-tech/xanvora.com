@@ -48,7 +48,7 @@ var canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
 var hud=document.getElementById('hud'),titleScreen=document.getElementById('title-screen'),pauseScreen=document.getElementById('pause-screen'),endScreen=document.getElementById('end-screen');
 var W=25,H=19,T=32,map=[],player={x:1.5,y:1.5,dir:0},monster={x:23.5,y:17.5,fromX:23.5,fromY:17.5,path:[],timer:0,alert:0};
 var state='menu',level=0,hasFuse=false,hasKey=false,power=false,battery=100,elapsed=0,last=0,toastTimer=0,soundOn=true,audio=null,keys={},touchKeys={},noteSeen=false,damageFlash=0,stepSound=0;
-var exitPos={x:23,y:17},fusePos={x:0,y:0},keyPos={x:0,y:0},notePos={x:0,y:0};
+var exitPos={x:23,y:17},fusePos={x:0,y:0},keyPos={x:0,y:0},notePos={x:0,y:0},genPos={x:0,y:0};
 var levels=[
  {name:'THE SERVICE WING',hint:'Something is moving between the shelves.',monsters:1,battery:100},
  {name:'THE LABORATORY',hint:'The lights only make the shadows longer.',monsters:1,battery:90},
@@ -66,7 +66,7 @@ function generate(){
  for(var i=0;i<Math.floor(W*H*.075);i++){var x=1+rand(W-2),y=1+rand(H-2);if(map[y][x]==='#'&&((map[y][x-1]==='.'&&map[y][x+1]==='.')||(map[y-1]&&map[y-1][x]==='.'&&map[y+1]&&map[y+1][x]==='.')))map[y][x]='.';}
  exitPos={x:W-2,y:H-2};map[exitPos.y][exitPos.x]='E';
  var floors=[];for(var yy=1;yy<H-1;yy++)for(var xx=1;xx<W-1;xx++)if(map[yy][xx]==='.'&&Math.abs(xx-1)+Math.abs(yy-1)>7&&Math.abs(xx-exitPos.x)+Math.abs(yy-exitPos.y)>3)floors.push({x:xx,y:yy});
- shuffle(floors);fusePos=floors.pop();keyPos=floors.pop();notePos=floors.pop();map[fusePos.y][fusePos.x]='F';map[keyPos.y][keyPos.x]='K';map[notePos.y][notePos.x]='N';
+ shuffle(floors);fusePos=floors.pop();keyPos=floors.pop();notePos=floors.pop();genPos=floors.pop();map[fusePos.y][fusePos.x]='F';map[keyPos.y][keyPos.x]='K';map[notePos.y][notePos.x]='N';map[genPos.y][genPos.x]='G';
  player={x:1.5,y:1.5,dir:0};monster={x:W-2.5,y:H-2.5,fromX:W-2.5,fromY:H-2.5,path:[],timer:0,alert:0};
  if(level===2){var m=floors.pop();if(m)monster2={x:m.x+.5,y:m.y+.5,path:[],timer:0,alert:0};else monster2=null;}else monster2=null;
  hasFuse=false;hasKey=false;power=false;battery=levels[level].battery;elapsed=0;noteSeen=false;damageFlash=0;
@@ -101,9 +101,9 @@ function interact(){
  if(o.t==='F'&&!hasFuse){hasFuse=true;map[o.y][o.x]='.';toast('FUSE ACQUIRED. Find the power junction.');tone(520,.12,.04);updateHud();return;}
  if(o.t==='K'&&!hasKey){hasKey=true;map[o.y][o.x]='.';toast('EXIT KEY FOUND. Now get out.');tone(640,.14,.04);updateHud();return;}
  if(o.t==='N'&&!noteSeen){noteSeen=true;map[o.y][o.x]='.';showNote();return;}
+ if(o.t==='G'&&!power){if(!hasFuse){toast('POWER JUNCTION. Find a fuse first.');tone(100,.1,.025);return;}power=true;toast('POWER RESTORED. The exit is live.');tone(480,.1,.04);setTimeout(function(){if(soundOn)tone(620,.2,.035)},120);updateHud();return;}
  if(o.t==='E'){if(!hasKey){toast('LOCKED. You still need the exit key.');tone(100,.1,.04);return;}if(!hasFuse){toast('POWER IS DOWN. Find the fuse first.');return;}if(!power){toast('The exit panel is dead. Restore the power junction.');return;}completeLevel();return;}
  }
- if(hasFuse&&!power){power=true;toast('POWER RESTORED. The exit is live.');tone(480,.1,.04);setTimeout(function(){if(soundOn)tone(620,.2,.035)},120);updateHud();return;}
  toast('Nothing here. Keep searching.');
 }
 function showNote(){
@@ -150,6 +150,7 @@ function draw(){
  if(t==='F'){ctx.fillStyle=hasFuse?'#1b2525':'#e5b56b';ctx.fillRect(x+.25,y+.28,.5,.42);ctx.fillStyle='#151a1b';ctx.fillRect(x+.34,y+.35,.32,.12);}
  if(t==='K'){ctx.strokeStyle='#e5b56b';ctx.lineWidth:.07;ctx.beginPath();ctx.arc(x+.4,y+.4,.16,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#e5b56b';ctx.fillRect(x+.39,y+.45,.08,.25);ctx.fillRect(x+.43,y+.61,.17,.06);}
  if(t==='N'){ctx.fillStyle='#9ba9a1';ctx.fillRect(x+.3,y+.25,.4,.5);ctx.fillStyle='#414c49';ctx.fillRect(x+.36,y+.34,.27,.025);ctx.fillRect(x+.36,y+.43,.22,.025);}
+ if(t==='G'){ctx.fillStyle=power?'#a5c5a2':'#8c5c42';ctx.fillRect(x+.18,y+.18,.64,.64);ctx.fillStyle='#101516';ctx.fillRect(x+.26,y+.26,.48,.48);ctx.fillStyle=power?'#a5c5a2':'#d64b43';ctx.fillRect(x+.35,y+.35,.3,.08);ctx.fillRect(x+.35,y+.52,.3,.08);}
  if(t==='E'){ctx.fillStyle=power?'#b2d5ae': '#693d3a';ctx.fillRect(x+.12,y+.1,.76,.8);ctx.fillStyle='#0c1112';ctx.fillRect(x+.23,y+.18,.54,.64);ctx.fillStyle=power?'#b2d5ae':'#b24c44';ctx.fillRect(x+.68,y+.47,.06,.06);if(hasKey&&hasFuse&&power){ctx.fillStyle='#b2d5ae';ctx.fillRect(x+.28,y+.25,.44,.035);}}
  }
  }
