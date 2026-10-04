@@ -48,14 +48,14 @@
 <section class="hud"><div>SCORE<strong id="score">000000</strong></div><div>COINS<strong id="coins">×00</strong></div><div>WORLD<strong>1-1</strong></div><div>TIME<strong id="time">400</strong></div><div>LIVES<strong id="lives">♥♥♥</strong></div><button id="musicToggle" class="music-toggle" aria-label="Toggle background music">♫ MUSIC ON</button></section>
 <section class="arena"><canvas id="game" aria-label="Xanvora World 1-1 platform game"></canvas>
 <div class="mobile"><div class="cluster"><button class="ctrl" id="left" aria-label="Move left">◀</button><button class="ctrl" id="right" aria-label="Move right">▶</button></div><button class="ctrl jump" id="jump">JUMP</button></div>
-<div class="screen" id="menu"><div class="panel"><div class="pixel">XANVORA ORIGINAL ADVENTURE</div><h1>MUSHROOM RUN</h1><p>Explore the moonlit pixel kingdom, collect glowing coins, out-jump the night critters, and find the flag before dawn!</p><button class="mainbtn" id="start">START LEVEL ▶</button><p class="help">USE THE ON-SCREEN ARROW AND JUMP BUTTONS<br>TIP: TAP JUMP JUST BEFORE LANDING TO BUFFER YOUR JUMP</p></div></div>
+<div class="screen" id="menu"><div class="panel"><div class="pixel">XANVORA ORIGINAL ADVENTURE</div><h1>MUSHROOM RUN</h1><p>Race through the moonlit kingdom, dodge spike traps, stomp critters, collect coins and rare crystals, and reach the flag before dawn!</p><button class="mainbtn" id="start">START LEVEL ▶</button><p class="help">USE THE ON-SCREEN ARROW AND JUMP BUTTONS<br>TIP: HOLD JUMP FOR A HIGHER LEAP · CRYSTALS ARE WORTH 750 POINTS</p></div></div>
 <div class="screen off" id="dead"><div class="panel"><div class="pixel">OOPS!</div><h1>TRY AGAIN</h1><p id="deadText">You ran out of lives.</p><button class="mainbtn" id="retry">RESTART LEVEL ↻</button></div></div>
 <div class="screen off" id="win"><div class="panel"><div class="pixel">LEVEL CLEAR!</div><h1>YOU DID IT!</h1><p id="winText">You reached the flag!</p><button class="mainbtn" id="again">PLAY AGAIN ↻</button></div></div>
 </section><footer class="bottom"><span>✦ FIND THE HIDDEN COINS</span><span>RUN FAST · JUMP PRECISELY · REACH THE FLAG</span></footer></main>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
-let W=800,H=450,dpr=1,mode='menu',last=0,cam=0,score=0,coins=0,lives=3,timeLeft=400,timerAcc=0,touch={left:false,right:false},jumpQueued=false,jumpBuffer=0,player,solids=[],blocks=[],coinItems=[],enemies=[],particles=[],flag,goalX=0,groundY=400,audio=null,soundOn=true,musicOn=true,musicTimer=null,musicStep=0;
+let W=800,H=450,dpr=1,mode='menu',last=0,cam=0,score=0,coins=0,lives=3,timeLeft=400,timerAcc=0,touch={left:false,right:false},jumpQueued=false,jumpBuffer=0,jumpHeld=false,player,solids=[],blocks=[],coinItems=[],gems=[],hazards=[],enemies=[],particles=[],flag,goalX=0,groundY=400,audio=null,soundOn=true,musicOn=true,musicTimer=null,musicStep=0,stompChain=0,stompTimer=0,landDust=0;
 const TILE=32,LEVEL_W=3000,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a);
 function ensureAudio(){try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();return audio}catch(e){return null}}
 function sfx(f=440,d=.08,type='square',vol=.025){if(!soundOn)return;try{const ac=ensureAudio();if(!ac)return;const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
@@ -71,7 +71,7 @@ function addSolid(x,y,w,h,kind='ground'){solids.push({x,y,w,h,kind})}
 function addBlock(x,above,kind='brick',content='coin'){blocks.push({x,y:groundY-above,w:TILE,h:TILE,kind,content,used:false,bump:0})}
 function addCoin(x,above){coinItems.push({x,y:groundY-above,r:8,got:false,phase:rand(0,6)})}
 function addEnemy(x){enemies.push({x,y:groundY-26,w:25,h:24,vx:-42,vy:0,alive:true,phase:rand(0,6),squash:0})}
-function buildLevel(resetPlayer=true){solids=[];blocks=[];coinItems=[];enemies=[];particles=[];groundY=H-44;
+function buildLevel(resetPlayer=true){solids=[];blocks=[];coinItems=[];gems=[];hazards=[];enemies=[];particles=[];stompChain=0;stompTimer=0;groundY=H-44;
  // Continuous ground with deliberate pits.
  let x=0;const pits=[[470,565],[990,1085],[1580,1680],[2210,2310]];
  for(let i=0;i<pits.length;i++){const [a,b]=pits[i];if(a>x)addSolid(x,groundY, a-x,120,'ground');x=b}if(x<LEVEL_W)addSolid(x,groundY,LEVEL_W-x,120,'ground');
@@ -88,6 +88,9 @@ function buildLevel(resetPlayer=true){solids=[];blocks=[];coinItems=[];enemies=[
  // Pipes as solid obstacles.
  [[570,64,64],[870,96,96],[1320,64,64],[1710,96,96],[2110,64,64],[2380,64,64]].forEach(([px,h])=>addSolid(px,groundY-h,48,h,'pipe'));
  [370,630,805,920,1270,1390,1750,1930,2150,2400,2600,2770].forEach(addEnemy);
+ // New hazards and bonus crystals add risk/reward decisions to the route.
+ [[430,1],[760,2],[945,1],[1150,2],[1540,2],[1885,1],[2075,2],[2550,2],[2690,1]].forEach(([hx,count])=>hazards.push({x:hx,y:groundY-18,w:count*24,h:18,count}));
+ [[420,78],[785,118],[1115,84],[1410,120],[1645,80],[1900,82],[2180,115],[2585,82],[2720,100]].forEach(([gx,gy],i)=>gems.push({x:gx,y:groundY-gy,r:10,got:false,phase:i*.8}));
  goalX=LEVEL_W-125;flag={x:goalX,y:groundY-230};
  if(resetPlayer){player={x:55,y:groundY-40,prevY:groundY-40,w:23,h:31,vx:0,vy:0,onGround:false,coyote:0.12,face:1,invuln:0,dead:false};cam=0}
 }
@@ -98,27 +101,33 @@ function getRects(){return [...solids,...blocks.map(b=>({x:b.x,y:b.y-(b.bump>0?M
 function overlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
 function die(){if(player.invuln>0)return;lives--;updateHud();sfx(140,.22,'sawtooth',.04);if(lives<=0){mode='dead';$('deadText').textContent='Score '+String(score).padStart(6,'0')+' · Coins '+coins+'. Give it another go!';hideScreens('dead');return}player.x=Math.max(35,player.x-90);player.y=groundY-90;player.vx=0;player.vy=0;player.invuln=1.7;cam=Math.max(0,player.x-W*.32)}
 function collectCoin(c){if(c.got)return;c.got=true;coins++;score+=200;burst(c.x,c.y,'#ffe46b',7);sfx(920,.07,'square',.02);updateHud()}
+function collectGem(g){if(g.got)return;g.got=true;score+=750;burst(g.x,g.y,'#62f4e4',12);sfx(1120,.14,'triangle',.035);updateHud()}
 function bumpBlock(b){if(b.used&&b.kind==='question')return;b.bump=1;if(b.content==='coin'){score+=200;coins++;burst(b.x+16,b.y-10,'#ffe46b',8);sfx(900,.08)}else if(b.content==='mushroom'){score+=1000;burst(b.x+16,b.y-8,'#ff795f',8);sfx(600,.12)}if(b.kind==='question')b.used=true;updateHud()}
 function update(dt){if(mode!=='play')return;timerAcc+=dt;if(timerAcc>=1){const dec=Math.floor(timerAcc);timerAcc-=dec;timeLeft-=dec;updateHud();if(timeLeft<=0){die();return}}
 const p=player;p.prevY=p.y;p.invuln=Math.max(0,p.invuln-dt);if(p.onGround)p.coyote=.12;else p.coyote=Math.max(0,(p.coyote||0)-dt);
 const left=touch.left,right=touch.right;
-const accel=p.onGround?1900:1100,maxSpeed=205;if(left){p.vx-=accel*dt;p.face=-1}else if(right){p.vx+=accel*dt;p.face=1}else p.vx*=Math.pow(p.onGround?.0008:.16,dt);
+const accel=p.onGround?2300:1250,maxSpeed=245;if(left){p.vx-=accel*dt;p.face=-1}else if(right){p.vx+=accel*dt;p.face=1}else p.vx*=Math.pow(p.onGround?.00025:.32,dt);
 p.vx=clamp(p.vx,-maxSpeed,maxSpeed);
 if(jumpQueued)jumpBuffer=.32;if(jumpBuffer>0&&(p.onGround||p.coyote>0)){p.vy=-650;p.onGround=false;p.coyote=0;jumpBuffer=0;sfx(520,.10,'square',.03)}else jumpBuffer=Math.max(0,jumpBuffer-dt);jumpQueued=false
-p.vy=Math.min(800,p.vy+1550*dt);
+// Variable-height jump: holding JUMP gives a higher arc; releasing it creates a quick hop.
+const gravity=(p.vy<0&&jumpHeld)?1120:((p.vy<0)?2200:1720);
+p.vy=Math.min(900,p.vy+gravity*dt);
 // X collision
 p.x+=p.vx*dt;let rects=getRects();for(const r of rects){if(overlap(p,r)){if(p.vx>0)p.x=r.x-p.w;else if(p.vx<0)p.x=r.x+r.w;p.vx=0}}
 p.x=clamp(p.x,0,LEVEL_W-p.w);
 // Y collision
-p.y+=p.vy*dt;p.onGround=false;rects=getRects();for(const r of rects){if(overlap(p,r)){if(p.vy>0){p.y=r.y-p.h;p.vy=0;p.onGround=true}else if(p.vy<0){p.y=r.y+r.h;p.vy=0;if(r.ref)bumpBlock(r.ref)}}}
+p.y+=p.vy*dt;p.onGround=false;rects=getRects();for(const r of rects){if(overlap(p,r)){if(p.vy>0){p.y=r.y-p.h;p.vy=0;p.onGround=true;landDust=.12;burst(p.x+p.w/2,p.y+p.h,'#b6c8c9',3)}else if(p.vy<0){p.y=r.y+r.h;p.vy=0;if(r.ref)bumpBlock(r.ref)}}}
 for(const b of blocks)b.bump=Math.max(0,b.bump-dt*4);
 for(const c of coinItems){c.phase+=dt*4;if(!c.got&&overlap({x:p.x-5,y:p.y-5,w:p.w+10,h:p.h+10},{x:c.x-c.r,y:c.y-c.r,w:c.r*2,h:c.r*2}))collectCoin(c)}
+for(const g of gems){g.phase+=dt*3;if(!g.got&&overlap({x:p.x-5,y:p.y-5,w:p.w+10,h:p.h+10},{x:g.x-g.r,y:g.y-g.r,w:g.r*2,h:g.r*2}))collectGem(g)}
+for(const h of hazards){if(overlap(p,{x:h.x,y:h.y,w:h.w,h:h.h})){if(p.invuln<=0)die();break}}
 for(const e of enemies){if(!e.alive)continue;e.phase+=dt*5;e.vy=Math.min(700,e.vy+1400*dt);e.x+=e.vx*dt;e.y+=e.vy*dt;
  // land on ground or solids
  for(const r of getRects()){if(overlap(e,r)){if(e.vy>0){e.y=r.y-e.h;e.vy=0}if(e.vx<0)e.x=r.x+ r.w;else if(e.vx>0)e.x=r.x-e.w;e.vx*=-1}}
- if(overlap(p,e)){const prevBottom=p.prevY+p.h;if(p.vy>80&&prevBottom<=e.y+9){e.alive=false;p.vy=-360;score+=500;burst(e.x+e.w/2,e.y+e.h/2,'#ff8a54',9);sfx(240,.09,'square',.03);updateHud()}else if(p.invuln<=0)die()}
+ if(overlap(p,e)){const prevBottom=p.prevY+p.h;if(p.vy>80&&prevBottom<=e.y+9){e.alive=false;p.vy=-405;stompChain=stompTimer>0?stompChain+1:1;stompTimer=1.25;const bonus=500*stompChain;score+=bonus;burst(e.x+e.w/2,e.y+e.h/2,'#ff8a54',9+Math.min(stompChain,5));sfx(240+stompChain*65,.09,'square',.03);updateHud()}else if(p.invuln<=0)die()}
 }
 if(p.y>H+130)die();
+stompTimer=Math.max(0,stompTimer-dt);if(stompTimer<=0)stompChain=0;landDust=Math.max(0,landDust-dt);
 for(const a of particles){a.x+=a.vx*dt;a.y+=a.vy*dt;a.vy+=260*dt;a.life-=dt}particles=particles.filter(a=>a.life>0);
 cam=clamp(p.x-W*.34,0,LEVEL_W-W);
 if(p.x+p.w>=goalX){mode='win';score+=Math.max(0,timeLeft)*10;updateHud();$('winText').textContent='Final score '+String(score).padStart(6,'0')+' · Coins '+coins+' · You cleared World 1-1!';hideScreens('win');sfx(780,.3,'triangle',.04)}
@@ -157,6 +166,10 @@ function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.ima
  for(const s of solids){if(s.kind==='ground'){ctx.fillStyle='#67445a';ctx.fillRect(s.x,s.y,s.w,s.h);ctx.fillStyle='#4b9271';ctx.fillRect(s.x,s.y,s.w,8);for(let tx=Math.floor(s.x/32)*32;tx<s.x+s.w;tx+=32){ctx.fillStyle='#3d725f';ctx.fillRect(tx,s.y,30,5);ctx.fillStyle='#493248';ctx.fillRect(tx,s.y+10,32,2);ctx.fillStyle='#926078';ctx.fillRect(tx+3,s.y+15,5,5);ctx.fillRect(tx+20,s.y+25,7,5);ctx.fillStyle='#8c482f';ctx.fillRect(tx+15,s.y+8,2,8)}}else if(s.kind==='pipe'){ctx.fillStyle='#12533f';ctx.fillRect(s.x,s.y+8,s.w,s.h);ctx.fillStyle='#38a879';ctx.fillRect(s.x+5,s.y+10,7,s.h-10);ctx.fillStyle='#073b38';ctx.fillRect(s.x+s.w-7,s.y+10,7,s.h-10);ctx.fillStyle='#1d8b63';ctx.fillRect(s.x-5,s.y,s.w+10,18);ctx.fillStyle='#72e4b2';ctx.fillRect(s.x,s.y+3,s.w,5);ctx.fillStyle='#087031';ctx.fillRect(s.x-5,s.y+15,s.w+10,4)}}
  for(const b of blocks)drawBlock(b.x,b.y-(b.bump>0?Math.sin(b.bump*Math.PI)*7:0),b.kind,b.used);
  for(const c of coinItems){if(c.got)continue;const w=6+Math.abs(Math.sin(c.phase))*5;ctx.save();ctx.shadowColor='#ffe66b';ctx.shadowBlur=15;ctx.fillStyle='#c67c1d';ctx.fillRect(c.x-w/2,c.y-10,w,20);ctx.fillStyle='#ffe96b';ctx.fillRect(c.x-w/2+2,c.y-8,Math.max(2,w-4),16);ctx.fillStyle='#fff9bd';ctx.fillRect(c.x-1,c.y-6,2,7);ctx.restore()}
+ // Cyan crystals are worth more than coins and sparkle as optional rewards.
+ for(const g of gems){if(g.got)continue;const bob=Math.sin(g.phase)*3;ctx.save();ctx.translate(g.x,g.y+bob);ctx.shadowColor='#5dfff0';ctx.shadowBlur=16;ctx.fillStyle='#1c9fb0';ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(9,-2);ctx.lineTo(5,10);ctx.lineTo(-5,10);ctx.lineTo(-9,-2);ctx.closePath();ctx.fill();ctx.fillStyle='#8cfff1';ctx.beginPath();ctx.moveTo(0,-9);ctx.lineTo(3,-1);ctx.lineTo(-2,5);ctx.lineTo(-5,-2);ctx.closePath();ctx.fill();ctx.restore()}
+ // Clearly readable spike traps, placed on safe ground between other challenges.
+ for(const h of hazards){ctx.fillStyle='#b8c9dc';for(let i=0;i<h.count;i++){const sx=h.x+i*24;ctx.beginPath();ctx.moveTo(sx,h.y+h.h);ctx.lineTo(sx+12,h.y);ctx.lineTo(sx+24,h.y+h.h);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(sx+10,h.y+5,3,7);ctx.fillStyle='#b8c9dc'}ctx.fillStyle='#6b7e9b';ctx.fillRect(h.x,h.y+h.h-3,h.w,3)}
  for(const e of enemies){if(!e.alive)continue;ctx.fillStyle='#8e3f29';ctx.fillRect(e.x,e.y+e.h-5,e.w,5);ctx.fillStyle='#c86b42';ctx.fillRect(e.x+2,e.y+5,e.w-4,e.h-8);ctx.fillStyle='#ef9a5d';ctx.fillRect(e.x+5,e.y+2,e.w-10,7);ctx.fillStyle='#fff';ctx.fillRect(e.x+5,e.y+9,5,6);ctx.fillRect(e.x+15,e.y+9,5,6);ctx.fillStyle='#26334a';ctx.fillRect(e.x+7,e.y+11,3,4);ctx.fillRect(e.x+17,e.y+11,3,4);ctx.fillStyle='#613a32';ctx.fillRect(e.x,e.y+e.h-3,9,4);ctx.fillRect(e.x+e.w-9,e.y+e.h-3,9,4)}
  // finish flag and pole
  ctx.fillStyle='#a8b8d6';ctx.fillRect(flag.x,flag.y,5,groundY-flag.y);ctx.fillStyle='#fff';ctx.fillRect(flag.x-3,flag.y-3,11,7);ctx.fillStyle='#ff5145';ctx.beginPath();ctx.moveTo(flag.x+5,flag.y+8);ctx.lineTo(flag.x+48,flag.y+22);ctx.lineTo(flag.x+5,flag.y+37);ctx.closePath();ctx.fill();ctx.fillStyle='#ffe66b';ctx.fillRect(goalX-14,groundY-12,32,12);
@@ -171,7 +184,7 @@ function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.ima
 }
 function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;try{update(dt);draw()}catch(err){console.error('XANVORA game loop:',err);mode='error';ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.fillStyle='#080f2c';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font='bold 18px system-ui';ctx.textAlign='center';ctx.fillText('GAME ERROR — PLEASE RELOAD',W/2,H/2);ctx.textAlign='start'}requestAnimationFrame(loop)}
 function pressHold(id,key){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();touch[key]=true;el.setPointerCapture?.(e.pointerId)});const up=e=>{touch[key]=false};el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up)}
-pressHold('left','left');pressHold('right','right');function requestJump(e){if(e){e.preventDefault();e.stopPropagation()}if(mode!=='play'||!player)return;player.vy=-720;player.onGround=false;player.coyote=0;jumpQueued=false;jumpBuffer=0;sfx(520,.10,'square',.03)}const jumpBtn=$('jump');jumpBtn.addEventListener('pointerdown',requestJump,{passive:false});$('start').onclick=start;$('retry').onclick=start;$('again').onclick=start;$('musicToggle').onclick=toggleMusic;
+pressHold('left','left');pressHold('right','right');function requestJump(e){if(e){e.preventDefault();e.stopPropagation()}if(mode!=='play'||!player)return;player.vy=-720;player.onGround=false;player.coyote=0;jumpQueued=false;jumpBuffer=0;sfx(520,.10,'square',.03)}const jumpBtn=$('jump');jumpBtn.addEventListener('pointerdown',e=>{jumpHeld=true;requestJump(e)},{passive:false});const releaseJump=()=>{jumpHeld=false};jumpBtn.addEventListener('pointerup',releaseJump);jumpBtn.addEventListener('pointercancel',releaseJump);jumpBtn.addEventListener('lostpointercapture',releaseJump);$('start').onclick=start;$('retry').onclick=start;$('again').onclick=start;$('musicToggle').onclick=toggleMusic;
 resize();buildLevel(true);requestAnimationFrame(loop);
 })();
 </script></body></html>
