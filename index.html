@@ -53,7 +53,7 @@ for(let i=objects.length-1;i>=0;i--){let o=objects[i];o.z-=dt*(.27+Math.min(.3,t
 for(let i=sparks.length-1;i>=0;i--){let s=sparks[i];s.life-=dt;s.x+=s.vx*dt;s.y+=s.vy*dt;if(s.life<=0)sparks.splice(i,1)}
 if(Math.floor(dist/180)>Math.floor((dist-dt*(23+Math.min(27,time*.42)))/180)){palette=palettes[(Math.floor(dist/180)+phase)%palettes.length];toast('DIMENSIONAL FRONT // '+(Math.floor(dist/180)+1));tone(350,.15)}
 if(Math.floor(time*4)%2===0)updateHud()}
-function project(x,z){let p=1/(z+.14);return {x:W/2+x*p*130,y:H*.48+(1-z)*p*24+p*8,scale:p}}
+function project(x,z){let p=.24+(1-z)*1.62;return {x:W/2+x*(30+(1-z)*170),y:H*.45+(1-z)*H*.34,scale:p}}
 function poly(points,fill,stroke=null,lw=1){c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=lw;c.stroke()}}
 function draw(){c.save();if(shake>0)c.translate(random(-shake,shake),random(-shake,shake));let g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,palette.sky);g.addColorStop(.55,palette.far);g.addColorStop(1,'#070a13');c.fillStyle=g;c.fillRect(0,0,W,H);
 // distant dimensional skyline
