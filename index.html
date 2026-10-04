@@ -124,6 +124,27 @@ cam=clamp(p.x-W*.34,0,LEVEL_W-W);
 if(p.x+p.w>=goalX){mode='win';score+=Math.max(0,timeLeft)*10;updateHud();$('winText').textContent='Final score '+String(score).padStart(6,'0')+' · Coins '+coins+' · You cleared World 1-1!';hideScreens('win');sfx(780,.3,'triangle',.04)}
 }
 function cloud(x,y,s=1){ctx.fillStyle='#1b2850';ctx.fillRect(x,y,42*s,14*s);ctx.fillRect(x+9*s,y-9*s,18*s,17*s);ctx.fillRect(x+25*s,y-5*s,20*s,14*s);ctx.fillStyle='#334477';ctx.fillRect(x+4*s,y+11*s,35*s,3*s)}
+// Four-frame, original pixel-art character sprite sheet (idle, run A, run B, jump).
+const heroSheet=document.createElement('canvas');heroSheet.width=128;heroSheet.height=40;
+const hs=heroSheet.getContext('2d');
+function makeHeroFrame(frame){
+ const ox=frame*32,px=(x,y,w,h,color)=>{hs.fillStyle=color;hs.fillRect(ox+x,y,w,h)};
+ // backpack and body
+ px(4,13,5,12,'#d95a3f');px(8,14,16,14,'#273f6a');px(10,17,12,9,'#426aa0');
+ px(11,18,3,3,'#f4c34e');px(17,18,3,3,'#f4c34e');
+ // face, hair and cap
+ px(8,5,16,14,'#6c3b36');px(9,7,13,10,'#f5c99d');px(18,9,4,4,'#fff');px(20,10,2,3,'#233754');
+ px(12,14,8,2,'#5b332d');
+ px(6,2,20,6,'#087d7d');px(9,0,14,5,'#25c6b2');px(10,1,8,2,'#73f0d8');
+ px(16,2,5,4,'#f9d65c');px(17,2,2,2,'#fff4ad');
+ // scarf
+ px(7,17,17,4,'#ff704e');px(7,18,12,2,'#ffb24d');
+ if(frame===3){px(5,25,7,4,'#a64b35');px(17,25,7,4,'#a64b35');px(5,27,5,2,'#f5b45e');px(18,27,5,2,'#f5b45e');}
+ else {const shift=frame===1?2:frame===2?-2:0;px(7+shift,27,7,5,'#a64b35');px(18-shift,27,7,5,'#a64b35');px(8+shift,28,5,2,'#f5b45e');px(19-shift,28,5,2,'#f5b45e');}
+ px(3,30,25,3,'#17304f');
+}
+for(let frame=0;frame<4;frame++)makeHeroFrame(frame);
+function heroFrame(){if(!player)return 0;if(!player.onGround)return 3;if(Math.abs(player.vx)>25)return Math.floor(performance.now()/115)%2+1;return 0}
 function drawBlock(x,y,kind,used=false){if(kind==='question'){ctx.fillStyle=used?'#b68a43':'#ffcc42';ctx.fillRect(x,y,32,32);ctx.fillStyle=used?'#d2aa65':'#fff08a';ctx.fillRect(x+3,y+3,26,4);ctx.fillRect(x+3,y+3,4,26);ctx.fillStyle=used?'#8e6c3c':'#d98124';ctx.fillRect(x+3,y+28,29,4);ctx.fillRect(x+28,y+3,4,29);if(!used){ctx.fillStyle='#fff8cc';ctx.font='bold 24px monospace';ctx.textAlign='center';ctx.fillText('?',x+16,y+24);ctx.textAlign='start'}}else{ctx.fillStyle='#b85b38';ctx.fillRect(x,y,32,32);ctx.fillStyle='#f5a05c';ctx.fillRect(x+2,y+2,28,4);ctx.fillStyle='#783e36';ctx.fillRect(x,y+15,32,3);ctx.fillRect(x+14,y,3,15);ctx.fillRect(x+7,y+18,3,14);ctx.fillRect(x+25,y+18,3,14);ctx.fillStyle='#d9824c';ctx.fillRect(x+3,y+5,10,7);ctx.fillRect(x+18,y+19,5,7)}}
 function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#070d25');sky.addColorStop(.58,'#17254d');sky.addColorStop(1,'#35406b');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);ctx.save();ctx.globalAlpha=.18;ctx.fillStyle='#b9d8ff';ctx.beginPath();ctx.arc(W*.79,H*.19,42,0,Math.PI*2);ctx.fill();ctx.restore();ctx.fillStyle='#f4f0c8';ctx.beginPath();ctx.arc(W*.79,H*.19,25,0,Math.PI*2);ctx.fill();ctx.fillStyle='#c9d6ed';ctx.beginPath();ctx.arc(W*.79+9,H*.19-6,22,0,Math.PI*2);ctx.fill();ctx.fillStyle='#f9f3d6';for(let i=0;i<75;i++){const sx=((i*127+31)%(W-12))+6,sy=((i*71+17)%(Math.max(80,H*.72)));const r=i%9===0?2:1;ctx.globalAlpha=.45+((i*13)%50)/100;ctx.fillRect(sx,sy,r,r);if(i%13===0){ctx.fillRect(sx-3,sy,7,1);ctx.fillRect(sx,sy-3,1,7)}}ctx.globalAlpha=1;
  // distant hills and clouds scroll at parallax speed
@@ -139,13 +160,11 @@ function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.ima
  for(const e of enemies){if(!e.alive)continue;ctx.fillStyle='#8e3f29';ctx.fillRect(e.x,e.y+e.h-5,e.w,5);ctx.fillStyle='#c86b42';ctx.fillRect(e.x+2,e.y+5,e.w-4,e.h-8);ctx.fillStyle='#ef9a5d';ctx.fillRect(e.x+5,e.y+2,e.w-10,7);ctx.fillStyle='#fff';ctx.fillRect(e.x+5,e.y+9,5,6);ctx.fillRect(e.x+15,e.y+9,5,6);ctx.fillStyle='#26334a';ctx.fillRect(e.x+7,e.y+11,3,4);ctx.fillRect(e.x+17,e.y+11,3,4);ctx.fillStyle='#613a32';ctx.fillRect(e.x,e.y+e.h-3,9,4);ctx.fillRect(e.x+e.w-9,e.y+e.h-3,9,4)}
  // finish flag and pole
  ctx.fillStyle='#a8b8d6';ctx.fillRect(flag.x,flag.y,5,groundY-flag.y);ctx.fillStyle='#fff';ctx.fillRect(flag.x-3,flag.y-3,11,7);ctx.fillStyle='#ff5145';ctx.beginPath();ctx.moveTo(flag.x+5,flag.y+8);ctx.lineTo(flag.x+48,flag.y+22);ctx.lineTo(flag.x+5,flag.y+37);ctx.closePath();ctx.fill();ctx.fillStyle='#ffe66b';ctx.fillRect(goalX-14,groundY-12,32,12);
- // Original Xanvora trailblazer: star cap, gold scarf, midnight overalls and tiny pack.
- if(player&&!(player.invuln>0&&Math.floor(performance.now()/80)%2===0)){const x=player.x,y=player.y;ctx.save();if(player.face<0){ctx.translate(x+player.w,0);ctx.scale(-1,1);ctx.translate(-x,0)}
- ctx.fillStyle='#17304f';ctx.fillRect(x+1,y+29,22,3);ctx.fillStyle='#a64b35';ctx.fillRect(x+2,y+26,8,5);ctx.fillRect(x+14,y+26,8,5);ctx.fillStyle='#f5b45e';ctx.fillRect(x+3,y+27,5,2);ctx.fillRect(x+15,y+27,5,2);
- ctx.fillStyle='#d95a3f';ctx.fillRect(x+1,y+13,6,12);ctx.fillStyle='#273f6a';ctx.fillRect(x+5,y+13,15,14);ctx.fillStyle='#426aa0';ctx.fillRect(x+7,y+16,11,9);ctx.fillStyle='#f4c34e';ctx.fillRect(x+8,y+17,3,3);ctx.fillRect(x+14,y+17,3,3);
- ctx.fillStyle='#6c3b36';ctx.fillRect(x+4,y+5,16,13);ctx.fillStyle='#f5c99d';ctx.fillRect(x+5,y+7,13,10);ctx.fillStyle='#fff';ctx.fillRect(x+14,y+9,4,4);ctx.fillStyle='#233754';ctx.fillRect(x+16,y+10,2,3);ctx.fillStyle='#5b332d';ctx.fillRect(x+8,y+13,8,3);ctx.fillRect(x+7,y+14,4,2);ctx.fillRect(x+13,y+14,4,2);
- ctx.fillStyle='#087d7d';ctx.fillRect(x+2,y+2,19,6);ctx.fillStyle='#25c6b2';ctx.fillRect(x+5,y,13,5);ctx.fillStyle='#73f0d8';ctx.fillRect(x+6,y+1,8,2);ctx.fillStyle='#f9d65c';ctx.fillRect(x+11,y+2,5,4);ctx.fillStyle='#fff4ad';ctx.fillRect(x+12,y+2,2,2);ctx.fillRect(x+11,y+4,5,1);
- ctx.fillStyle='#ff704e';ctx.fillRect(x+2,y+15,18,4);ctx.fillStyle='#ffb24d';ctx.fillRect(x+2,y+16,13,2);ctx.fillStyle='#ff704e';ctx.fillRect(x-3,y+16,6,3);ctx.fillStyle='#ffd66b';ctx.fillRect(x-4,y+16,3,2);ctx.restore()}
+ // Animated original Xanvora hero, rendered from the four-frame sprite sheet.
+ if(player&&!(player.invuln>0&&Math.floor(performance.now()/80)%2===0)){
+  ctx.save();if(player.face<0){ctx.translate(player.x*2+player.w,0);ctx.scale(-1,1);ctx.translate(-player.x,0)}
+  const frame=heroFrame();ctx.drawImage(heroSheet,frame*32,0,32,40,player.x-4,player.y-5,31,39);ctx.restore();
+ }
  for(const a of particles){ctx.globalAlpha=clamp(a.life/a.max,0,1);ctx.fillStyle=a.color;ctx.fillRect(a.x,a.y,a.size,a.size)}ctx.globalAlpha=1;ctx.restore();
  // little location progress line
  ctx.fillStyle='#17365c55';ctx.fillRect(12,12,W-24,4);ctx.fillStyle='#fff';ctx.fillRect(12,12,(W-24)*clamp(player?player.x/goalX:0,0,1),4);
