@@ -25,7 +25,7 @@
  .shell{padding:3px;gap:3px}.top{min-height:22px}.hud{padding:3px 8px;gap:4px}
  .arena{flex:1;min-height:0}
  canvas{height:calc(100% - 82px);flex-basis:calc(100% - 82px)}
- .mobile{inset:auto 12px 4px;height:72px}
+ .mobile{inset:auto 12px 4px;height:72px;z-index:8;pointer-events:none}.mobile .cluster,.mobile .ctrl{pointer-events:auto;position:relative;z-index:9}
  .cluster{gap:12px}
  .ctrl{width:54px;height:54px;border-radius:16px;font-size:23px}
  .ctrl.jump{width:64px;height:64px;font-size:11px}
@@ -150,9 +150,9 @@ function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.ima
  // little location progress line
  ctx.fillStyle='#17365c55';ctx.fillRect(12,12,W-24,4);ctx.fillStyle='#fff';ctx.fillRect(12,12,(W-24)*clamp(player?player.x/goalX:0,0,1),4);
 }
-function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}
+function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;try{update(dt);draw()}catch(err){console.error('XANVORA game loop:',err);mode='error';ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.fillStyle='#080f2c';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font='bold 18px system-ui';ctx.textAlign='center';ctx.fillText('GAME ERROR — PLEASE RELOAD',W/2,H/2);ctx.textAlign='start'}requestAnimationFrame(loop)}
 function pressHold(id,key){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();touch[key]=true;el.setPointerCapture?.(e.pointerId)});const up=e=>{touch[key]=false};el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up)}
-pressHold('left','left');pressHold('right','right');function requestJump(e){if(e)e.preventDefault();jumpQueued=true;jumpBuffer=.32;if(player&&(player.onGround||player.coyote>0)&&mode==='play'){player.vy=-650;player.onGround=false;player.coyote=0;jumpQueued=false;jumpBuffer=0;sfx(520,.10,'square',.03)}}const jumpBtn=$('jump');jumpBtn.addEventListener('pointerdown',requestJump,{passive:false});$('start').onclick=start;$('retry').onclick=start;$('again').onclick=start;$('musicToggle').onclick=toggleMusic;
+pressHold('left','left');pressHold('right','right');function requestJump(e){if(e){e.preventDefault();e.stopPropagation()}if(mode!=='play')return;jumpQueued=true;jumpBuffer=.38;if(player){player.coyote=Math.max(player.coyote||0,.14);if(player.onGround||player.coyote>0){player.vy=-720;player.onGround=false;player.coyote=0;jumpQueued=false;jumpBuffer=0;sfx(520,.10,'square',.03)}}}const jumpBtn=$('jump');jumpBtn.addEventListener('pointerdown',requestJump,{passive:false});$('start').onclick=start;$('retry').onclick=start;$('again').onclick=start;$('musicToggle').onclick=toggleMusic;
 resize();buildLevel(true);requestAnimationFrame(loop);
 })();
 </script></body></html>
