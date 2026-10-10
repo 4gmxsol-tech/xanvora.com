@@ -1,9 +1,7 @@
-import { countRdapRegistrations } from "./rdap.js";
-
 const ALLOWED_ACTIONS = new Set(["create_building","set_guardian","reset_world"]);
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://xanvora.com",
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS"
 };
@@ -33,12 +31,6 @@ export default {
     if(request.method!=="POST")return json({error:"POST required"},405);
 
     const url = new URL(request.url);
-    if (url.pathname === "/rdap") {
-      let body;
-      try { body = await request.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
-      const result = await countRdapRegistrations(body);
-      return json(result, result.error ? 400 : 200);
-    }
     if (url.pathname !== "/" && url.pathname !== "/plan") return json({error:"Not found"},404);
 
     let body;
