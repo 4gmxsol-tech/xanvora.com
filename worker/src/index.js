@@ -3,7 +3,7 @@ import { countRdapRegistrations } from "./rdap.js";
 const ALLOWED_ACTIONS = new Set(["create_building","set_guardian","reset_world"]);
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://xanvora.com",
   "Access-Control-Allow-Headers": "content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS"
 };
