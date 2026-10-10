@@ -43,9 +43,21 @@
  .bottom{display:none}
 }
 
+
+/* Xanvora direct-browser RDAP checker: no proxy or third-party backend */
+.radar-open{border:1px solid #8ba9d8;border-radius:6px;background:#0b1d3b;color:#d9e8ff;padding:5px 8px;font-size:10px;font-weight:900;letter-spacing:.04em}
+.radar-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:14px;background:#030817df;overflow:auto}
+.radar-modal.open{display:flex}
+.radar-card{width:min(100%,680px);max-height:92dvh;overflow:auto;background:#f4f8ff;color:#10294b;border:2px solid #83bfff;border-radius:16px;padding:18px;box-shadow:0 20px 70px #0009;font-family:system-ui,sans-serif}
+.radar-card h2{margin:0 0 5px;font-size:22px}.radar-card p{font-size:13px;line-height:1.5;color:#49617e}
+.radar-field{display:block;margin:12px 0 5px;font-weight:800;font-size:12px}.radar-input{width:100%;padding:11px;border:1px solid #a9bdd6;border-radius:8px;background:#fff;color:#10294b;font:inherit}
+.radar-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.radar-btn{border:0;border-radius:8px;padding:10px 13px;font-weight:900;background:#145db8;color:#fff}.radar-btn.secondary{background:#dbe6f4;color:#15375d}
+.radar-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}.radar-stat{background:#e4edf9;border-radius:9px;padding:10px;text-align:center}.radar-stat strong{display:block;font-size:24px}.radar-stat span{font-size:11px}
+.radar-results{font-size:12px;line-height:1.6;overflow-wrap:anywhere}.radar-results .registered{color:#a52222}.radar-results .not_found{color:#137348}.radar-results .unresolved,.radar-results .unsupported{color:#8a5b00}
+@media(max-width:500px){.radar-card{padding:13px}.radar-summary{gap:5px}.radar-stat{padding:8px 4px}.radar-stat strong{font-size:20px}}
 </style></head><body><main class="shell">
 <header class="top"><div><div class="logo"><span>XAN</span>VORA <span style="color:#ed4d3d">◆</span></div><div class="sub">THE XANVORA MUSHROOM RUN</div></div><div class="sub" id="gameSubtitle">MUSHROOM RUN · WORLD 1-1</div></header>
-<section class="hud"><div>SCORE<strong id="score">000000</strong></div><div>COINS<strong id="coins">×00</strong></div><div>GAME<strong id="worldLabel">1-1</strong></div><div>TIME<strong id="time">400</strong></div><div>LIVES<strong id="lives">♥♥♥</strong></div><button id="switchGame" class="music-toggle" aria-label="Switch game">⇄ SWITCH GAME</button><button id="musicToggle" class="music-toggle" aria-label="Toggle background music">♫ MUSIC ON</button></section>
+<section class="hud"><div>SCORE<strong id="score">000000</strong></div><div>COINS<strong id="coins">×00</strong></div><div>GAME<strong id="worldLabel">1-1</strong></div><div>TIME<strong id="time">400</strong></div><div>LIVES<strong id="lives">♥♥♥</strong></div><button id="switchGame" class="music-toggle" aria-label="Switch game">⇄ SWITCH GAME</button><button id="openRdap" class="radar-open" type="button">◎ DOMAIN RADAR</button><button id="musicToggle" class="music-toggle" aria-label="Toggle background music">♫ MUSIC ON</button></section>
 <section class="arena"><canvas id="game" aria-label="Xanvora World 1-1 platform game"></canvas>
 <div class="mobile"><div class="cluster"><button class="ctrl" id="left" aria-label="Move left">◀</button><button class="ctrl" id="right" aria-label="Move right">▶</button></div><button class="ctrl jump" id="jump">JUMP</button></div>
 <div class="screen" id="menu"><div class="panel"><div class="pixel">XANVORA ARCADE · CHOOSE YOUR GAME</div><h1 id="menuTitle">MUSHROOM RUN</h1><p id="menuDesc">Choose an adventure. Your two games live inside the same arcade, and you can switch between them at any time.</p><button class="mainbtn" id="start">🍄 MUSHROOM RUN</button><button class="mainbtn" id="startPepseman" style="margin:8px 0 0;background:#147fbd;box-shadow:0 4px 0 #07527f">🥤 PEPSIMAN DASH</button><p class="help" id="menuHelp">MUSHROOM RUN: ARROWS TO MOVE · HOLD JUMP FOR A HIGHER LEAP<br>PEPSIMAN DASH: DODGE OBSTACLES, JUMP AND COLLECT CANS</p></div></div>
@@ -235,4 +247,75 @@ function pressHold(id,key){const el=$(id);el.addEventListener('pointerdown',e=>{
 pressHold('left','left');pressHold('right','right');function requestJump(e){if(e){e.preventDefault();e.stopPropagation()}if(mode!=='play'||!player)return;/* Queue the request; the physics step decides whether a jump is legal. */jumpQueued=true;jumpBuffer=.16}const jumpBtn=$('jump');jumpBtn.addEventListener('pointerdown',e=>{jumpHeld=true;requestJump(e)},{passive:false});const releaseJump=()=>{jumpHeld=false};jumpBtn.addEventListener('pointerup',releaseJump);jumpBtn.addEventListener('pointercancel',releaseJump);jumpBtn.addEventListener('lostpointercapture',releaseJump);$('start').onclick=()=>{gameType='mushroom';start()};$('startPepseman').onclick=()=>{gameType='pepseman';start()};$('retry').onclick=start;$('again').onclick=start;$('switchGame').onclick=()=>{mode='menu';touch.left=touch.right=false;jumpHeld=false;jumpQueued=false;$('menuTitle').textContent='CHOOSE YOUR GAME';$('menuDesc').textContent='Switch instantly between the platform adventure and the endless soda-run challenge.';hideScreens('menu')};$('musicToggle').onclick=toggleMusic;
 resize();buildLevel(true);requestAnimationFrame(loop);
 })();
-</script></body></html>
+</script>
+<script id="xanvora-direct-rdap">
+(()=> {
+ const $=id=>document.getElementById(id);
+ const modal=$('rdapModal'), status=$('rdapStatus'), summary=$('rdapSummary'), output=$('rdapResults');
+ const bootstrapUrl='https://data.iana.org/rdap/dns.json';
+ const timeoutMs=6500;
+ $('openRdap').addEventListener('click',()=>modal.classList.add('open'));
+ $('closeRdap').addEventListener('click',()=>modal.classList.remove('open'));
+ modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});
+ $('clearRdap').addEventListener('click',()=>{summary.hidden=true;summary.innerHTML='';output.textContent='';status.textContent='Ready.'});
+ const safeLabel=s=>/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(s);
+ async function fetchWithTimeout(url){
+  const controller=new AbortController(), timer=setTimeout(()=>controller.abort(),timeoutMs);
+  try{return await fetch(url,{headers:{Accept:'application/rdap+json, application/json'},signal:controller.signal,mode:'cors',cache:'no-store'})}
+  finally{clearTimeout(timer)}
+ }
+ function mapServices(data){
+  const map=Object.create(null);
+  for(const item of (data.services||[])){const suffixes=item[0]||[],urls=item[1]||[];for(const suffix of suffixes)map[String(suffix).toLowerCase()]=urls}
+  return map;
+ }
+ async function checkOne(name,tld,services){
+  const bases=services[tld];
+  if(!bases||!bases.length)return {tld,status:'unsupported',detail:'No IANA RDAP endpoint'};
+  let last='No successful registry response';
+  for(const base of bases){
+   const url=String(base).replace(/\/$/,'')+'/domain/'+encodeURIComponent(name+'.'+tld);
+   try{
+    const res=await fetchWithTimeout(url);
+    if(res.status===404)return {tld,status:'not_found'};
+    if(res.status===200){
+     const body=await res.json().catch(()=>null);
+     if(body&&(body.objectClassName==='domain'||body.ldhName||body.handle))return {tld,status:'registered'};
+     last='Unrecognized RDAP response';continue;
+    }
+    last='Registry HTTP '+res.status;
+   }catch(e){last=e&&e.name==='AbortError'?'Timed out':'Browser CORS/network restriction';}
+  }
+  return {tld,status:'unresolved',detail:last};
+ }
+ $('runRdap').addEventListener('click',async()=>{
+  const name=$('rdapName').value.trim().toLowerCase();
+  const tlds=[...new Set($('rdapTlds').value.split(/[\s,;]+/).map(x=>x.trim().replace(/^\./,'').toLowerCase()).filter(Boolean))];
+  if(!safeLabel(name)){status.textContent='Enter a valid base name without an extension.';return}
+  if(!tlds.length||tlds.length>100||tlds.some(t=>!/^[a-z0-9-]{2,63}$/.test(t))){status.textContent='Enter 1–100 valid extensions, separated by commas.';return}
+  $('runRdap').disabled=true;summary.hidden=true;summary.innerHTML='';output.textContent='';
+  status.textContent='Loading IANA RDAP directory…';
+  try{
+   const boot=await fetchWithTimeout(bootstrapUrl);
+   if(!boot.ok)throw new Error('IANA directory returned HTTP '+boot.status);
+   const services=mapServices(await boot.json()), results=[];
+   for(let i=0;i<tlds.length;i+=5){
+    status.textContent='Checking registrations… '+Math.min(i+5,tlds.length)+' / '+tlds.length;
+    results.push(...await Promise.all(tlds.slice(i,i+5).map(t=>checkOne(name,t,services))));
+   }
+   const counts={registered:0,not_found:0,unresolved:0,unsupported:0};
+   for(const r of results)counts[r.status]=(counts[r.status]||0)+1;
+   summary.hidden=false;
+   summary.innerHTML=[
+    ['registered','Registered'],['not_found','Not found'],['unresolved','Unresolved']
+   ].map(([key,label])=>'<div class="radar-stat"><strong>'+counts[key]+'</strong><span>'+label+'</span></div>').join('');
+   output.innerHTML=results.map(r=>'<div class="'+r.status+'"><strong>'+r.tld+'</strong> — '+({registered:'Registered',not_found:'Not found in RDAP',unresolved:'Unresolved',unsupported:'No RDAP endpoint listed'})[r.status]+(r.detail?' · '+r.detail:'')+'</div>').join('');
+   status.textContent='Finished '+results.length+' checks · '+new Date().toLocaleString();
+  }catch(e){
+   status.textContent='Could not access the IANA directory from this browser. This may be a network or CORS restriction; no proxy is configured.';
+  }finally{$('runRdap').disabled=false}
+ });
+})();
+</script>
+</body></html>
