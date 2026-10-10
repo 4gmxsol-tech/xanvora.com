@@ -4,14 +4,16 @@ This Worker provides:
 - `/` or `/plan`: secure server-side AI game-command planner.
 - `/rdap`: RDAP registration count for a base domain label across provided TLDs.
 
-## Configure AI planner
+## Deploy
 ```bash
-npx wrangler secret put OPENAI_API_KEY
+cd worker
 npx wrangler deploy
 ```
 
-## RDAP registration count
-Send `POST /rdap` with JSON:
+The RDAP route requires no Atom or OpenAI API key. It retrieves the IANA RDAP DNS bootstrap and queries each advertised registry RDAP service.
+
+## RDAP request
+Send `POST /rdap` to the deployed Worker:
 ```json
 {
   "name": "example",
@@ -19,11 +21,16 @@ Send `POST /rdap` with JSON:
 }
 ```
 
-The endpoint uses the IANA RDAP DNS bootstrap and each TLD's advertised RDAP service. A domain object returned with HTTP 200 is counted as registered; HTTP 404 is counted as not found in RDAP; unsupported or failed requests are counted as unresolved. It does not treat RDAP 404 as a guarantee of commercial availability.
+Use the base label only, without a suffix. Maximum 100 TLDs per request.
 
-Maximum 100 TLDs per request. Results include counts and per-TLD status. The RDAP module has no dependency on the OpenAI key.
+## Response interpretation
+- `registered`: RDAP returned a recognizable domain object (HTTP 200).
+- `not_found`: RDAP returned HTTP 404. This is not a guarantee of commercial availability.
+- `unresolved`: unsupported TLD, timeout, or failed registry response. Never count this as registered or available.
 
-## Security / deployment notes
-- The current CORS policy follows the existing planner's behavior. Restrict it to your production origin before public use.
-- Add rate limiting / Turnstile or another abuse-prevention mechanism before exposing a public endpoint broadly.
-- Do not place API keys in client-side JavaScript.
+Response includes aggregate counts, per-TLD outcomes, timestamp, and registration rate among resolved results. RDAP registration checks are not appraisal estimates.
+
+## Security
+- CORS is restricted to `https://xanvora.com`.
+- Add rate limiting or Turnstile before broad public exposure.
+- Never put private API keys in client-side JavaScript.
