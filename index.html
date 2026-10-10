@@ -64,6 +64,16 @@
 <div class="screen off" id="dead"><div class="panel"><div class="pixel">OOPS!</div><h1>TRY AGAIN</h1><p id="deadText">You ran out of lives.</p><button class="mainbtn" id="retry">RESTART LEVEL ↻</button></div></div>
 <div class="screen off" id="win"><div class="panel"><div class="pixel">LEVEL CLEAR!</div><h1>YOU DID IT!</h1><p id="winText">You reached the flag!</p><button class="mainbtn" id="again">PLAY AGAIN ↻</button></div></div>
 </section><footer class="bottom"><span>✦ FIND THE HIDDEN COINS</span><span>RUN FAST · JUMP PRECISELY · REACH THE FLAG</span></footer></main>
+<div id="rdapModal" class="radar-modal" role="dialog" aria-modal="true" aria-labelledby="rdapTitle">
+<section class="radar-card">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 id="rdapTitle">XANVORA · DOMAIN RADAR</h2><button id="closeRdap" class="radar-btn secondary" type="button" aria-label="Close">✕</button></div>
+<p>Direct browser-to-registry RDAP checks. No proxy, API key, or third-party backend. Some registries may block browser requests; those checks are marked unresolved.</p>
+<label class="radar-field" for="rdapName">Base name (without extension)</label><input class="radar-input" id="rdapName" maxlength="63" placeholder="example" autocomplete="off" spellcheck="false">
+<label class="radar-field" for="rdapTlds">Extensions separated by commas (up to 100)</label><textarea class="radar-input" id="rdapTlds" rows="3" spellcheck="false">com, net, org, io, ai, si, dev, app, co, xyz</textarea>
+<div class="radar-actions"><button id="runRdap" class="radar-btn" type="button">CHECK REGISTRATIONS</button><button id="clearRdap" class="radar-btn secondary" type="button">CLEAR RESULTS</button></div>
+<p id="rdapStatus" role="status">Ready. RDAP checks registration data, not retail availability or domain value.</p><div id="rdapSummary" class="radar-summary" hidden></div><div id="rdapResults" class="radar-results" aria-live="polite"></div>
+<p style="font-size:11px">Registered = registry returned a domain object; not found = registry returned 404 (not a guarantee of availability); unresolved = unsupported or blocked/timed out. No domain data is sent to a Xanvora server.</p>
+</section></div>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
