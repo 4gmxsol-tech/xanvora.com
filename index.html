@@ -46,6 +46,43 @@
 
 
 /* XANVORA ARCADE EXPANSION — polished panels, options and responsive HUD */
+
+/* Premium arcade pass: clearer hierarchy, tighter controls, cinematic menu */
+:root{--x-cyan:#73f7e6;--x-gold:#ffe18a;--x-ink:#071226;--x-glass:#0a1930}
+body{background:radial-gradient(ellipse at 50% -20%,#214b71 0%,#09162b 48%,#030814 100%);color:#eaf5ff}
+.shell{max-width:1180px;gap:12px}
+.top{padding:7px 4px 2px;align-items:center}
+.logo{font-size:clamp(21px,3vw,30px);font-weight:1000;letter-spacing:.09em}
+.sub{letter-spacing:.16em}
+.hud{display:flex;align-items:center;gap:clamp(6px,1vw,12px);padding:10px 12px;background:linear-gradient(110deg,#0d213bfa,#102b49f5 65%,#0b1b32fa);border:1px solid #82c8f34d;border-radius:14px}
+.hud>div{display:flex;flex-direction:column;gap:4px;min-width:42px;font-size:9px;letter-spacing:.13em;color:#91b4d2}
+.hud strong{font-size:15px;letter-spacing:.04em;color:#f5fbff}
+.music-toggle,.radar-open{white-space:nowrap;min-height:34px}
+.arena{position:relative;overflow:hidden;border:1px solid #83d9f4a6;border-radius:18px;background:#070e20;box-shadow:0 0 0 5px #5dd7f40a,0 24px 65px #0007,0 0 40px #1ab9d512}
+.arena:after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;box-shadow:inset 0 0 0 1px #ffffff12,inset 0 0 70px #03091635}
+#game{display:block}
+.screen{z-index:10;background:radial-gradient(ellipse at 50% 25%,#153b5bd9,#020817ed 78%);backdrop-filter:blur(7px)}
+.panel{position:relative;overflow:hidden;padding:clamp(22px,4vw,38px);border:1px solid #ffffff;border-radius:24px;background:linear-gradient(155deg,#f8fcff 0%,#e8f1ff 72%,#d6e7fb 100%);box-shadow:0 1px 0 #fff,0 8px 0 #163858,0 28px 90px #0009;width:min(92%,540px)}
+.panel:before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,#5ee8df,#77baff,#ffdc78,#ff7a68)}
+.panel h1{margin:10px 0 14px;font-size:clamp(32px,6vw,54px);line-height:.98;color:#e74454;text-shadow:3px 3px 0 #ffdf82;letter-spacing:-.055em}
+.panel p{font-size:14px;line-height:1.65;max-width:410px;margin:0 auto 22px}
+.pixel{letter-spacing:.2em;font-size:10px;font-weight:1000}
+.mainbtn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 20px;font-size:12px;font-weight:1000;letter-spacing:.08em;border:1px solid #ffffff70}
+.help{font-size:10px!important;letter-spacing:.06em;line-height:1.8!important;margin:20px auto 0!important;color:#617995!important}
+.bottom{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:0 5px;color:#7da3c6;font-size:9px;letter-spacing:.16em}
+#pauseButton{border-color:#7bead85c}
+#optionsModal,#pauseScreen{z-index:40}
+#levelBanner{z-index:8}
+.mobile .ctrl{box-shadow:0 5px 20px #0004}
+@media(max-width:720px){
+ .shell{padding:8px;gap:8px}.top{padding:4px 2px}
+ .hud{gap:5px;padding:7px;border-radius:12px;flex-wrap:wrap}
+ .hud>div{min-width:35px;font-size:8px}.hud strong{font-size:12px}
+ .music-toggle,.radar-open{font-size:9px;padding:6px 7px;min-height:30px}
+ .arena{border-radius:13px}.panel{width:min(94%,480px);padding:22px 17px;border-radius:18px}
+ .panel p{font-size:12px}.bottom{font-size:8px;justify-content:center;text-align:center}
+}
+
 :root{--x-cyan:#64f5e5;--x-gold:#ffdc72;--x-panel:#0a1730}
 .top{color:#e2eeff}
 .logo{color:#eaf4ff;text-shadow:0 0 18px #40d9ff45}
@@ -114,7 +151,6 @@ canvas{image-rendering:auto}
 <div class="screen off" id="dead"><div class="panel"><div class="pixel">OOPS!</div><h1>TRY AGAIN</h1><p id="deadText">You ran out of lives.</p><button class="mainbtn" id="retry">RESTART LEVEL ↻</button></div></div>
 <div class="screen off" id="win"><div class="panel"><div class="pixel">LEVEL CLEAR!</div><h1>YOU DID IT!</h1><p id="winText">You reached the flag!</p><button class="mainbtn" id="again">PLAY AGAIN ↻</button></div></div>
 
-<button id="openOptions" class="option-btn" type="button" aria-haspopup="dialog">⚙ OPTIONS</button>
 <div id="toast" class="off" role="status" aria-live="polite"></div>
 <div id="levelBanner" hidden><strong>WORLD 2</strong><span>THE CRYSTAL CAVERNS</span></div>
 <div id="optionsModal" role="dialog" aria-modal="true" aria-labelledby="optionsTitle">
@@ -329,7 +365,7 @@ function draw(){if(gameType==='pepseman'){drawPepseman();return;}ctx.setTransfor
 function loop(t){const frameDt=Math.min(.033,(t-last)/1000||0);last=t;try{accumulator+=frameDt;let steps=0;while(accumulator>=FIXED_DT&&steps<8){update(FIXED_DT);accumulator-=FIXED_DT;steps++}if(steps===8)accumulator=0;draw()}catch(err){console.error('XANVORA game loop:',err);mode='error';ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.fillStyle='#080f2c';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font='bold 18px system-ui';ctx.textAlign='center';ctx.fillText('GAME ERROR — PLEASE RELOAD',W/2,H/2);ctx.textAlign='start'}requestAnimationFrame(loop)}
 function pressHold(id,key){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();touch[key]=true;el.setPointerCapture?.(e.pointerId)});const up=e=>{touch[key]=false};el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up)}
 pressHold('left','left');pressHold('right','right');function requestJump(e){if(e){e.preventDefault();e.stopPropagation()}if(mode!=='play'||!player)return;/* Queue the request; the physics step decides whether a jump is legal. */jumpQueued=true;jumpBuffer=.16}const jumpBtn=$('jump');jumpBtn.addEventListener('pointerdown',e=>{jumpHeld=true;requestJump(e)},{passive:false});const releaseJump=()=>{jumpHeld=false};jumpBtn.addEventListener('pointerup',releaseJump);jumpBtn.addEventListener('pointercancel',releaseJump);jumpBtn.addEventListener('lostpointercapture',releaseJump);$('start').onclick=()=>{gameType='mushroom';currentLevel=1;start();announceLevel()};$('startPepseman').onclick=()=>{gameType='pepseman';currentLevel=1;start();announceLevel()};$('retry').onclick=()=>{if(gameType==='mushroom')currentLevel=1;start();announceLevel()};$('again').onclick=()=>{currentLevel=1;start();announceLevel()};$('switchGame').onclick=()=>{mode='menu';touch.left=touch.right=false;jumpHeld=false;jumpQueued=false;$('menuTitle').textContent='CHOOSE YOUR GAME';$('menuDesc').textContent='Switch instantly between the platform adventure and the endless soda-run challenge.';hideScreens('menu')};$('musicToggle').onclick=toggleMusic;
-$('openOptions').onclick=()=>{openOptions()};$('closeOptions').onclick=()=> $('optionsModal').classList.remove('open');$('resumeOptions').onclick=()=>{SETTINGS.difficulty=$('difficultySelect').value;SETTINGS.speed=$('speedSelect').value;SETTINGS.sound=$('soundSelect').value;SETTINGS.particles=$('particleSelect').value;SETTINGS.controls=$('controlSelect').value;soundOn=SETTINGS.sound==='on';$('optionsModal').classList.remove('open');toast('OPTIONS SAVED · '+SETTINGS.speed.toUpperCase());};
+$('closeOptions').onclick=()=> $('optionsModal').classList.remove('open');$('resumeOptions').onclick=()=>{SETTINGS.difficulty=$('difficultySelect').value;SETTINGS.speed=$('speedSelect').value;SETTINGS.sound=$('soundSelect').value;SETTINGS.particles=$('particleSelect').value;SETTINGS.controls=$('controlSelect').value;soundOn=SETTINGS.sound==='on';$('optionsModal').classList.remove('open');toast('OPTIONS SAVED · '+SETTINGS.speed.toUpperCase());};
 $('pauseButton').onclick=()=>{if(mode==='play'){mode='paused';$('pauseScreen').classList.add('open');$('pauseButton').textContent='▶ RESUME'}else if(mode==='paused'){mode='play';$('pauseScreen').classList.remove('open');$('pauseButton').textContent='Ⅱ PAUSE'}};
 $('resumeGame').onclick=()=>{mode='play';$('pauseScreen').classList.remove('open');$('pauseButton').textContent='Ⅱ PAUSE'};$('pauseOptions').onclick=()=>openOptions();$('quitGame').onclick=()=>{mode='menu';$('pauseScreen').classList.remove('open');$('pauseButton').textContent='Ⅱ PAUSE';hideScreens('menu')};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('optionsModal').classList.contains('open'))$('optionsModal').classList.remove('open');else if(mode==='play')$('pauseButton').click();else if(mode==='paused')$('resumeGame').click();}if((e.key==='p'||e.key==='P')&&mode==='play')$('pauseButton').click();if(mode==='menu'&&e.key==='Enter')$('start').click();});
