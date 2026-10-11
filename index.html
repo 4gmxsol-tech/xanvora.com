@@ -44,6 +44,56 @@
 }
 
 
+
+/* XANVORA ARCADE EXPANSION — polished panels, options and responsive HUD */
+:root{--x-cyan:#64f5e5;--x-gold:#ffdc72;--x-panel:#0a1730}
+.top{color:#e2eeff}
+.logo{color:#eaf4ff;text-shadow:0 0 18px #40d9ff45}
+.hud{background:linear-gradient(125deg,#102749f5,#142f55f5);border:1px solid #8bc8ff80;border-radius:14px;box-shadow:0 8px 28px #0003,inset 0 1px #ffffff16}
+.hud>div{white-space:nowrap}.hud strong{color:var(--x-gold)}
+.music-toggle,.radar-open,.option-btn{border:1px solid #83cfff66;border-radius:9px;background:#0a1b36;color:#e7f4ff;padding:8px 10px;font-size:10px;font-weight:900;letter-spacing:.04em;cursor:pointer;transition:transform .18s,border-color .18s,background .18s}
+.music-toggle:hover,.radar-open:hover,.option-btn:hover{border-color:var(--x-cyan);background:#17375c;transform:translateY(-1px)}
+.arena{border:2px solid #a7e6ff;border-radius:15px;box-shadow:0 12px 34px #0005,0 0 0 1px #64f5e522;isolation:isolate}
+canvas{image-rendering:auto}
+.screen{background:radial-gradient(ellipse at 50% 35%,#153e63a8,#030a1bd9);backdrop-filter:blur(5px);animation:veilIn .28s ease both}
+.panel{background:linear-gradient(145deg,#f8fcff,#e1edff);border:1px solid #ffffff;border-radius:22px;box-shadow:0 16px 0 #213f65,0 30px 90px #0008;width:min(100%,520px);animation:panelIn .38s cubic-bezier(.2,.8,.2,1) both}
+.panel h1{color:#ec4a52;text-shadow:3px 3px #ffdb7a;letter-spacing:-.04em}
+.pixel{color:#167d98;font-size:11px}
+.panel p{color:#49617d}
+.mainbtn{border-radius:12px;background:linear-gradient(135deg,#ff7659,#e83a53);box-shadow:0 5px 0 #b22e42,0 8px 22px #e83a5325;min-width:180px;cursor:pointer;transition:transform .16s,filter .16s}
+.mainbtn:hover{filter:brightness(1.06);transform:translateY(-2px)}
+.mainbtn:active{transform:translateY(3px);box-shadow:0 2px 0 #b22e42}
+@keyframes veilIn{from{opacity:0}to{opacity:1}}
+@keyframes panelIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 #64f5e522}50%{box-shadow:0 0 0 7px #64f5e500}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+.mobile .ctrl{backdrop-filter:blur(8px);border-color:#ffffffd9}
+#optionsModal,#pauseScreen{position:absolute;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:14px;background:#030817d9;backdrop-filter:blur(8px);overflow:auto}
+#optionsModal.open,#pauseScreen.open{display:flex;animation:veilIn .2s ease both}
+.options-card{width:min(100%,470px);max-height:94%;overflow:auto;background:linear-gradient(145deg,#f8fbff,#e7f0ff);color:#183657;border:1px solid white;border-radius:20px;padding:22px;box-shadow:0 22px 80px #0008;animation:panelIn .25s ease both}
+.options-card h2{margin:0 0 6px;font-size:24px;letter-spacing:-.04em}
+.options-card p{margin:0 0 14px;color:#627790;font-size:12px;line-height:1.5}
+.option-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #cad9ed}
+.option-row label{font-size:13px;font-weight:850}.option-row small{display:block;color:#6a7e97;font-size:10px;font-weight:600;margin-top:3px}
+.option-select{width:155px;max-width:48%;border:1px solid #b3c8e3;border-radius:10px;background:#fff;color:#15365b;padding:9px;font:inherit;font-size:12px;font-weight:800}
+.option-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.option-actions .mainbtn{flex:1;min-width:125px}
+.secondary-btn{border:1px solid #b8cbe3;border-radius:10px;background:#dce8f7;color:#234464;padding:12px 15px;font-weight:900;cursor:pointer}
+.hud-tool{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+#toast{position:absolute;z-index:25;top:14px;left:50%;transform:translateX(-50%);background:#071c34ed;color:#dffefa;border:1px solid #64f5e588;padding:9px 15px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.04em;box-shadow:0 8px 28px #0005;pointer-events:none;animation:toastIn .2s ease both}
+#toast.off{display:none}
+#levelBanner{position:absolute;z-index:4;top:15%;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;text-shadow:0 3px 18px #000a;animation:bannerFade 2.2s ease both}
+#levelBanner strong{display:block;font-size:clamp(22px,5vw,40px);letter-spacing:.12em;color:#fff}
+#levelBanner span{font-size:10px;font-weight:900;letter-spacing:.24em;color:var(--x-cyan)}
+@keyframes bannerFade{0%{opacity:0;transform:translate(-50%,12px)}15%,72%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-8px)}}
+@media(max-width:720px){
+ .shell{padding:5px;gap:5px}.top{min-height:25px}.logo{font-size:17px}.sub{font-size:7px}
+ .hud{padding:5px 7px;gap:5px;border-radius:10px}.hud>div{font-size:9px}.music-toggle,.radar-open{padding:6px;font-size:9px}
+ .panel{padding:17px;border-radius:17px}.panel h1{font-size:clamp(27px,6vw,42px)}
+ .options-card{padding:16px}.option-row{padding:10px 0}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
 /* Xanvora direct-browser RDAP checker: no proxy or third-party backend */
 .radar-open{border:1px solid #8ba9d8;border-radius:6px;background:#0b1d3b;color:#d9e8ff;padding:5px 8px;font-size:10px;font-weight:900;letter-spacing:.04em}
 .radar-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:14px;background:#030817df;overflow:auto}
@@ -57,12 +107,30 @@
 @media(max-width:500px){.radar-card{padding:13px}.radar-summary{gap:5px}.radar-stat{padding:8px 4px}.radar-stat strong{font-size:20px}}
 </style></head><body><main class="shell">
 <header class="top"><div><div class="logo"><span>XAN</span>VORA <span style="color:#ed4d3d">◆</span></div><div class="sub">THE XANVORA MUSHROOM RUN</div></div><div class="sub" id="gameSubtitle">MUSHROOM RUN · WORLD 1-1</div></header>
-<section class="hud"><div>SCORE<strong id="score">000000</strong></div><div>COINS<strong id="coins">×00</strong></div><div>GAME<strong id="worldLabel">1-1</strong></div><div>TIME<strong id="time">400</strong></div><div>LIVES<strong id="lives">♥♥♥</strong></div><button id="switchGame" class="music-toggle" aria-label="Switch game">⇄ SWITCH GAME</button><button id="openRdap" class="radar-open" type="button">◎ DOMAIN RADAR</button><button id="musicToggle" class="music-toggle" aria-label="Toggle background music">♫ MUSIC ON</button></section>
+<section class="hud"><div>SCORE<strong id="score">000000</strong></div><div>COINS<strong id="coins">×00</strong></div><div>GAME<strong id="worldLabel">1-1</strong></div><div>TIME<strong id="time">400</strong></div><div>LIVES<strong id="lives">♥♥♥</strong></div><button id="switchGame" class="music-toggle" aria-label="Switch game">⇄ SWITCH GAME</button><button id="openRdap" class="radar-open" type="button">◎ DOMAIN RADAR</button><button id="musicToggle" class="music-toggle" aria-label="Toggle background music">♫ MUSIC ON</button><button id="pauseButton" class="music-toggle" type="button" aria-label="Pause game">Ⅱ PAUSE</button></section>
 <section class="arena"><canvas id="game" aria-label="Xanvora World 1-1 platform game"></canvas>
 <div class="mobile"><div class="cluster"><button class="ctrl" id="left" aria-label="Move left">◀</button><button class="ctrl" id="right" aria-label="Move right">▶</button></div><button class="ctrl jump" id="jump">JUMP</button></div>
-<div class="screen" id="menu"><div class="panel"><div class="pixel">XANVORA ARCADE · CHOOSE YOUR GAME</div><h1 id="menuTitle">MUSHROOM RUN</h1><p id="menuDesc">Choose an adventure. Your two games live inside the same arcade, and you can switch between them at any time.</p><button class="mainbtn" id="start">🍄 MUSHROOM RUN</button><button class="mainbtn" id="startPepseman" style="margin:8px 0 0;background:#147fbd;box-shadow:0 4px 0 #07527f">🥤 PEPSIMAN DASH</button><p class="help" id="menuHelp">MUSHROOM RUN: ARROWS TO MOVE · HOLD JUMP FOR A HIGHER LEAP<br>PEPSIMAN DASH: DODGE OBSTACLES, JUMP AND COLLECT CANS</p></div></div>
+<div id="levelTransition" class="screen off" aria-live="polite"><div class="panel"><div class="pixel">WORLD CLEAR</div><h1>LEVEL COMPLETE!</h1><p id="transitionText">Preparing the next world…</p></div></div><div class="screen" id="menu"><div class="panel"><div class="pixel">XANVORA ARCADE · CHOOSE YOUR GAME</div><h1 id="menuTitle">MUSHROOM RUN</h1><p id="menuDesc">Choose an adventure. Your two games live inside the same arcade, and you can switch between them at any time.</p><button class="mainbtn" id="start">🍄 MUSHROOM RUN</button><button class="mainbtn" id="startPepseman" style="margin:8px 0 0;background:#147fbd;box-shadow:0 4px 0 #07527f">🥤 PEPSIMAN DASH</button><p class="help" id="menuHelp">MUSHROOM RUN: ARROWS TO MOVE · HOLD JUMP FOR A HIGHER LEAP<br>PEPSIMAN DASH: DODGE OBSTACLES, JUMP AND COLLECT CANS</p></div></div>
 <div class="screen off" id="dead"><div class="panel"><div class="pixel">OOPS!</div><h1>TRY AGAIN</h1><p id="deadText">You ran out of lives.</p><button class="mainbtn" id="retry">RESTART LEVEL ↻</button></div></div>
 <div class="screen off" id="win"><div class="panel"><div class="pixel">LEVEL CLEAR!</div><h1>YOU DID IT!</h1><p id="winText">You reached the flag!</p><button class="mainbtn" id="again">PLAY AGAIN ↻</button></div></div>
+
+<button id="openOptions" class="option-btn" type="button" aria-haspopup="dialog">⚙ OPTIONS</button>
+<div id="toast" class="off" role="status" aria-live="polite"></div>
+<div id="levelBanner" hidden><strong>WORLD 2</strong><span>THE CRYSTAL CAVERNS</span></div>
+<div id="optionsModal" role="dialog" aria-modal="true" aria-labelledby="optionsTitle">
+ <section class="options-card">
+  <h2 id="optionsTitle">GAME OPTIONS</h2><p>Choose the feel of your run. Changes apply immediately to new attempts.</p>
+  <div class="option-row"><div><label for="difficultySelect">Difficulty</label><small>Enemy pressure and time budget</small></div><select id="difficultySelect" class="option-select"><option value="easy">Explorer</option><option value="normal" selected>Arcade</option><option value="hard">Challenge</option></select></div>
+  <div class="option-row"><div><label for="speedSelect">Speed profile</label><small>Movement and runner pace</small></div><select id="speedSelect" class="option-select"><option value="slow">Chill</option><option value="normal" selected>Normal</option><option value="fast">Turbo</option></select></div>
+  <div class="option-row"><div><label for="soundSelect">Sound effects</label><small>Collectibles, jumps and impact sounds</small></div><select id="soundSelect" class="option-select"><option value="on" selected>On</option><option value="off">Off</option></select></div>
+  <div class="option-row"><div><label for="particleSelect">Visual effects</label><small>Particles and screen feedback</small></div><select id="particleSelect" class="option-select"><option value="on" selected>On</option><option value="reduced">Reduced</option><option value="off">Off</option></select></div>
+  <div class="option-row"><div><label for="controlSelect">Controls</label><small>Keyboard, touch and game buttons</small></div><select id="controlSelect" class="option-select"><option value="modern" selected>Modern</option><option value="classic">Classic</option></select></div>
+  <div class="option-actions"><button id="resumeOptions" class="mainbtn" type="button">SAVE & CONTINUE</button><button id="closeOptions" class="secondary-btn" type="button">CLOSE</button></div>
+ </section>
+</div>
+<div id="pauseScreen" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+ <section class="options-card"><h2 id="pauseTitle">PAUSED</h2><p>Your run is safely paused.</p><div class="option-actions"><button id="resumeGame" class="mainbtn" type="button">RESUME</button><button id="pauseOptions" class="secondary-btn" type="button">OPTIONS</button><button id="quitGame" class="secondary-btn" type="button">EXIT TO MENU</button></div></section>
+</div>
 </section><footer class="bottom"><span>✦ FIND THE HIDDEN COINS</span><span>RUN FAST · JUMP PRECISELY · REACH THE FLAG</span></footer></main>
 <div id="rdapModal" class="radar-modal" role="dialog" aria-modal="true" aria-labelledby="rdapTitle">
 <section class="radar-card">
@@ -78,6 +146,7 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
 let W=800,H=450,dpr=1,mode='menu',gameType='mushroom',last=0,accumulator=0,cam=0,score=0,coins=0,lives=3,timeLeft=400,timerAcc=0,touch={left:false,right:false},jumpQueued=false,jumpBuffer=0,jumpHeld=false,player,solids=[],blocks=[],coinItems=[],gems=[],hazards=[],enemies=[],particles=[],flag,goalX=0,groundY=400,checkpointX=55,checkpointActive=false,runner={obstacles:[],cans:[],distance:0,speed:310,spawn:0,canSpawn:0,slide:0,flash:0},audio=null,soundOn=true,musicOn=true,musicTimer=null,musicStep=0,stompChain=0,stompTimer=0,landDust=0;
+const SETTINGS={difficulty:'normal',speed:'normal',sound:'on',particles:'on',controls:'modern'};let currentLevel=1,levelTransitionTimer=0,toastTimer=0,shake=0,menuGameType='mushroom';
 const FIXED_DT=1/120;
 const TILE=32,LEVEL_W=3000,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a);
 function ensureAudio(){try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();return audio}catch(e){return null}}
@@ -89,14 +158,19 @@ function startMusic(){ensureAudio();if(!audio||!musicOn)return;if(musicTimer)cle
 function toggleMusic(){musicOn=!musicOn;if(musicOn)startMusic();else{if(musicTimer)clearInterval(musicTimer);musicTimer=null;if(audio){const t=audio.currentTime;const g=audio.createGain();g.gain.setValueAtTime(.0001,t);g.connect(audio.destination)}$('musicToggle').textContent='♫ MUSIC OFF'}}
 function resize(){const old=groundY;dpr=Math.min(2,window.devicePixelRatio||1);W=Math.max(300,canvas.clientWidth);H=Math.max(260,canvas.clientHeight);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);const next=H-44,delta=next-old;if(player&&Math.abs(delta)>0){player.y+=delta;player.prevY+=delta;for(const a of solids){a.y+=delta}for(const a of blocks){a.y+=delta}for(const a of enemies){a.y+=delta}if(flag)flag.y+=delta}groundY=next;if(!player)buildLevel(false)}
 new ResizeObserver(resize).observe(canvas);
-function hideScreens(which){['menu','dead','win'].forEach(id=>$(id).classList.toggle('off',id!==which))}
+function hideScreens(which){['menu','dead','win','levelTransition'].forEach(id=>$(id).classList.toggle('off',id!==which))}
+function toast(message){const el=$('toast');if(!el)return;el.textContent=message;el.classList.remove('off');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.add('off'),1800)}
+function announceLevel(){const b=$('levelBanner');b.hidden=false;b.querySelector('strong').textContent='WORLD '+currentLevel;b.querySelector('span').textContent=currentLevel===1?'THE MOONLIT MEADOW':'THE CRYSTAL CAVERNS';b.style.animation='none';void b.offsetWidth;b.style.animation='';setTimeout(()=>{b.hidden=true},2300)}
+function speedFactor(){return SETTINGS.speed==='slow'?.78:SETTINGS.speed==='fast'?1.28:1}
+function difficultyProfile(){return SETTINGS.difficulty==='easy'?{lives:5,time:520,enemy:.78}:SETTINGS.difficulty==='hard'?{lives:2,time:330,enemy:1.3}:{lives:3,time:400,enemy:1}}
+function openOptions(){ $('optionsModal').classList.add('open');$('difficultySelect').value=SETTINGS.difficulty;$('speedSelect').value=SETTINGS.speed;$('soundSelect').value=SETTINGS.sound;$('particleSelect').value=SETTINGS.particles;$('controlSelect').value=SETTINGS.controls; }
 function addSolid(x,y,w,h,kind='ground'){solids.push({x,y,w,h,kind})}
 function addBlock(x,above,kind='brick',content='coin'){blocks.push({x,y:groundY-above,w:TILE,h:TILE,kind,content,used:false,bump:0})}
 function addCoin(x,above){coinItems.push({x,y:groundY-above,r:8,got:false,phase:rand(0,6)})}
 function addEnemy(x){enemies.push({x,y:groundY-26,w:25,h:24,vx:-42,vy:0,alive:true,phase:rand(0,6),squash:0})}
 function buildLevel(resetPlayer=true){solids=[];blocks=[];coinItems=[];gems=[];hazards=[];enemies=[];particles=[];stompChain=0;stompTimer=0;checkpointX=55;checkpointActive=false;groundY=H-44;
  // Continuous ground with deliberate pits.
- let x=0;const pits=[[470,565],[990,1085],[1580,1680],[2210,2310]];
+ let x=0;const pits=currentLevel===1?[[470,565],[990,1085],[1580,1680],[2210,2310]]:[[330,445],[720,835],[1120,1245],[1660,1780],[2180,2315]];
  for(let i=0;i<pits.length;i++){const [a,b]=pits[i];if(a>x)addSolid(x,groundY, a-x,120,'ground');x=b}if(x<LEVEL_W)addSolid(x,groundY,LEVEL_W-x,120,'ground');
  // brick/question formations; vertical distances measured from ground.
  [ [250,64,'question'],[282,64,'brick'],[314,64,'question'],[314,96,'brick'],[346,64,'question'],
@@ -110,26 +184,26 @@ function buildLevel(resetPlayer=true){solids=[];blocks=[];coinItems=[];gems=[];h
  [[270,105],[302,105],[334,105],[710,135],[742,135],[1180,105],[1212,105],[1244,105],[1470,167],[1502,167],[1828,105],[1860,105],[2006,135],[2038,135],[2470,105],[2502,105]].forEach(([cx,cy])=>addCoin(cx,cy));
  // Pipes as solid obstacles.
  [[570,64,64],[870,96,96],[1320,64,64],[1710,96,96],[2110,64,64],[2380,64,64]].forEach(([px,h])=>addSolid(px,groundY-h,48,h,'pipe'));
- [370,630,805,920,1270,1390,1750,1930,2150,2400,2600,2770].forEach(addEnemy);
+ (currentLevel===1?[370,630,805,920,1270,1390,1750,1930,2150,2400,2600,2770]:[290,550,645,960,1040,1320,1480,1850,2020,2380,2510,2720,2840]).forEach(addEnemy);
  // New hazards and bonus crystals add risk/reward decisions to the route.
  [[430,1],[760,2],[945,1],[1150,2],[1540,2],[1885,1],[2075,2],[2550,2],[2690,1]].forEach(([hx,count])=>hazards.push({x:hx,y:groundY-18,w:count*24,h:18,count}));
  [[420,78],[785,118],[1115,84],[1410,120],[1645,80],[1900,82],[2180,115],[2585,82],[2720,100]].forEach(([gx,gy],i)=>gems.push({x:gx,y:groundY-gy,r:10,got:false,phase:i*.8}));
- goalX=LEVEL_W-125;flag={x:goalX,y:groundY-230};checkpointX=1500;
+ goalX=LEVEL_W-125;flag={x:goalX,y:groundY-230};checkpointX=currentLevel===1?1500:1350;
  if(resetPlayer){player={x:55,y:groundY-40,prevY:groundY-40,w:23,h:31,vx:0,vy:0,onGround:false,coyote:0.12,face:1,invuln:0,dead:false};cam=0}
 }
-function start(){score=0;coins=0;lives=3;timeLeft=400;timerAcc=0;accumulator=0;jumpQueued=false;jumpBuffer=0;jumpHeld=false;touch.left=touch.right=false;if(gameType==='pepseman'){runner={obstacles:[],cans:[],distance:0,speed:310,spawn:.65,canSpawn:.9,slide:0,flash:0};player={x:Math.min(150,W*.23),y:groundY-42,prevY:groundY-42,w:28,h:40,vy:0,onGround:true,invuln:0,face:1};cam=0;$('worldLabel').textContent='DASH';$('gameSubtitle').textContent='PEPSIMAN DASH · ENDLESS RUN';}else{buildLevel(true);$('worldLabel').textContent='1-1';$('gameSubtitle').textContent='MUSHROOM RUN · WORLD 1-1';}mode='play';hideScreens(null);updateHud();startMusic();sfx(660,.12)}
+function start(){const profile=difficultyProfile();score=0;coins=0;lives=profile.lives;timeLeft=profile.time;timerAcc=0;accumulator=0;jumpQueued=false;jumpBuffer=0;jumpHeld=false;touch.left=touch.right=false;if(gameType==='pepseman'){runner={obstacles:[],cans:[],distance:0,speed:310*speedFactor(),spawn:.65,canSpawn:.9,slide:0,flash:0};player={x:Math.min(150,W*.23),y:groundY-42,prevY:groundY-42,w:28,h:40,vy:0,onGround:true,invuln:0,face:1};cam=0;$('worldLabel').textContent='DASH';$('gameSubtitle').textContent='PEPSIMAN DASH · ENDLESS RUN';}else{buildLevel(true);$('worldLabel').textContent=currentLevel===1?'1-1':'2-1';$('gameSubtitle').textContent='MUSHROOM RUN · WORLD '+currentLevel+'-1';}mode='play';hideScreens(null);updateHud();startMusic();sfx(660,.12)}
 function updateHud(){$('score').textContent=String(score).padStart(6,'0');$('coins').textContent='×'+String(coins).padStart(2,'0');$('lives').textContent='♥'.repeat(lives);$('time').textContent=Math.max(0,Math.ceil(timeLeft))}
-function burst(x,y,color,n=8){for(let i=0;i<n;i++){const a=rand(0,Math.PI*2),s=rand(35,150);particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(.2,.55),max:.55,color,size:rand(2,4)})}}
+function burst(x,y,color,n=8){if(SETTINGS.particles==='off')return;if(SETTINGS.particles==='reduced')n=Math.max(2,Math.ceil(n*.35));for(let i=0;i<n;i++){const a=rand(0,Math.PI*2),s=rand(35,150);particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(.2,.55),max:.55,color,size:rand(2,4)})}}
 function getRects(){return [...solids,...blocks.map(b=>({x:b.x,y:b.y-(b.bump>0?Math.sin(b.bump*Math.PI)*7:0),w:b.w,h:b.h,ref:b,kind:b.kind}))]}
 function overlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
 function die(){if(player.invuln>0)return;lives--;updateHud();sfx(140,.22,'sawtooth',.04);if(lives<=0){mode='dead';$('deadText').textContent='Score '+String(score).padStart(6,'0')+' · Coins '+coins+'. Give it another go!';hideScreens('dead');return}player.x=checkpointActive?checkpointX:Math.max(35,player.x-90);player.y=groundY-player.h-1;player.prevY=player.y;player.vx=0;player.vy=0;player.onGround=true;player.coyote=.12;player.invuln=1.7;jumpQueued=false;jumpBuffer=0;cam=clamp(player.x-W*.32,0,LEVEL_W-W)}
 function collectCoin(c){if(c.got)return;c.got=true;coins++;score+=200;burst(c.x,c.y,'#ffe46b',7);sfx(920,.07,'square',.02);updateHud()}
 function collectGem(g){if(g.got)return;g.got=true;score+=750;burst(g.x,g.y,'#62f4e4',12);sfx(1120,.14,'triangle',.035);updateHud()}
 function bumpBlock(b){if(b.used&&b.kind==='question')return;b.bump=1;if(b.content==='coin'){score+=200;coins++;burst(b.x+16,b.y-10,'#ffe46b',8);sfx(900,.08)}else if(b.content==='mushroom'){score+=1000;burst(b.x+16,b.y-8,'#ff795f',8);sfx(600,.12)}if(b.kind==='question')b.used=true;updateHud()}
-function update(dt){if(mode!=='play')return;if(gameType==='pepseman'){updatePepseman(dt);return;}timerAcc+=dt;if(timerAcc>=1){const dec=Math.floor(timerAcc);timerAcc-=dec;timeLeft-=dec;updateHud();if(timeLeft<=0){die();return}}
+function update(dt){if(mode==='transition'){levelTransitionTimer-=dt;if(levelTransitionTimer<=0){buildLevel(true);timeLeft=difficultyProfile().time;timerAcc=0;cam=0;$('worldLabel').textContent='2-1';$('gameSubtitle').textContent='MUSHROOM RUN · WORLD 2-1';mode='play';hideScreens(null);announceLevel();toast('WORLD 2 UNLOCKED');}return;}if(mode!=='play')return;if(gameType==='pepseman'){updatePepseman(dt);return;}timerAcc+=dt;if(timerAcc>=1){const dec=Math.floor(timerAcc);timerAcc-=dec;timeLeft-=dec;updateHud();if(timeLeft<=0){die();return}}
 const p=player;p.prevY=p.y;p.invuln=Math.max(0,p.invuln-dt);if(p.onGround)p.coyote=.12;else p.coyote=Math.max(0,(p.coyote||0)-dt);
 const left=touch.left,right=touch.right;
-const accel=p.onGround?2300:1250,maxSpeed=245;if(left){p.vx-=accel*dt;p.face=-1}else if(right){p.vx+=accel*dt;p.face=1}else p.vx*=Math.pow(p.onGround?.00025:.32,dt);
+const factor=speedFactor(),profile=difficultyProfile();const accel=(p.onGround?2300:1250)*factor,maxSpeed=245*factor;if(left){p.vx-=accel*dt;p.face=-1}else if(right){p.vx+=accel*dt;p.face=1}else p.vx*=Math.pow(p.onGround?.00025:.32,dt);
 p.vx=clamp(p.vx,-maxSpeed,maxSpeed);
 if(jumpQueued)jumpBuffer=.16;if(jumpBuffer>0&&(p.onGround||p.coyote>0)){p.vy=-650;p.onGround=false;p.coyote=0;jumpBuffer=0;sfx(520,.10,'square',.03)}else jumpBuffer=Math.max(0,jumpBuffer-dt);jumpQueued=false
 // Variable-height jump: holding JUMP gives a higher arc; releasing it creates a quick hop.
@@ -146,7 +220,7 @@ for(const g of gems){g.phase+=dt*3;if(!g.got&&overlap({x:p.x-5,y:p.y-5,w:p.w+10,
 for(const h of hazards){/* Narrow hitbox follows the spike tips, not the full decorative base. */if(overlap(p,{x:h.x+3,y:h.y+5,w:h.w-6,h:h.h-5})){if(p.invuln<=0)die();break}}
 for(const e of enemies){if(!e.alive)continue;e.phase+=dt*5;const enemyRects=getRects();
  // Resolve enemy movement on each axis independently to prevent wall/ceiling jitter.
- e.x+=e.vx*dt;for(const r of enemyRects){if(overlap(e,r)){if(e.vx>0)e.x=r.x-e.w;else e.x=r.x+r.w;e.vx*=-1}}
+ e.x+=e.vx*profile.enemy*dt;for(const r of enemyRects){if(overlap(e,r)){if(e.vx>0)e.x=r.x-e.w;else e.x=r.x+r.w;e.vx*=-1}}
  e.vy=Math.min(700,e.vy+1400*dt);e.y+=e.vy*dt;for(const r of enemyRects){if(overlap(e,r)){if(e.vy>0){e.y=r.y-e.h;e.vy=0}else if(e.vy<0){e.y=r.y+r.h;e.vy=0}}}
  // Turn around at unsupported edges instead of walking straight into pits.
  if(e.vy===0){const footX=e.vx>0?e.x+e.w+3:e.x-3;const supported=enemyRects.some(r=>footX>=r.x&&footX<=r.x+r.w&&Math.abs((e.y+e.h)-r.y)<3);if(!supported)e.vx*=-1}
@@ -157,12 +231,12 @@ stompTimer=Math.max(0,stompTimer-dt);if(stompTimer<=0)stompChain=0;landDust=Math
 for(const a of particles){a.x+=a.vx*dt;a.y+=a.vy*dt;a.vy+=260*dt;a.life-=dt}particles=particles.filter(a=>a.life>0);
 cam=clamp(p.x-W*.34,0,LEVEL_W-W);
 if(!checkpointActive&&p.x+p.w>=checkpointX){checkpointActive=true;score+=500;burst(checkpointX,groundY-34,'#72f4dc',14);sfx(760,.16,'triangle',.035);updateHud()}
-if(p.x+p.w>=goalX){mode='win';score+=Math.max(0,timeLeft)*10;updateHud();$('winText').textContent='Final score '+String(score).padStart(6,'0')+' · Coins '+coins+' · You cleared World 1-1!';hideScreens('win');sfx(780,.3,'triangle',.04)}
+if(p.x+p.w>=goalX){if(currentLevel===1){score+=Math.max(0,timeLeft)*10;currentLevel=2;mode='transition';levelTransitionTimer=2.0;$('transitionText').textContent='World 1 cleared! World 2 introduces tighter jumps, new hazards and a fresh route.';hideScreens('levelTransition');burst(p.x,p.y,'#64f5e5',24);sfx(780,.3,'triangle',.04);return;}mode='win';score+=Math.max(0,timeLeft)*10;updateHud();$('winText').textContent='Final score '+String(score).padStart(6,'0')+' · Coins '+coins+' · You cleared both worlds!';hideScreens('win');sfx(780,.3,'triangle',.04)}
 }
 
 // PEPSEMAN DASH: a separate endless-runner mode with original canvas-drawn art.
 function updatePepseman(dt){
- const p=player;runner.distance+=runner.speed*dt;runner.speed=Math.min(560,310+runner.distance*.018);runner.flash=Math.max(0,runner.flash-dt);runner.slide=Math.max(0,runner.slide-dt);
+ const p=player;runner.distance+=runner.speed*dt;runner.speed=Math.min(560*speedFactor(),310*speedFactor()+runner.distance*.018);runner.flash=Math.max(0,runner.flash-dt);runner.slide=Math.max(0,runner.slide-dt);
  p.prevY=p.y;p.invuln=Math.max(0,p.invuln-dt);
  if(jumpQueued){jumpBuffer=.14;jumpQueued=false}
  if(jumpBuffer>0&&p.onGround){p.vy=-610;p.onGround=false;jumpBuffer=0;sfx(560,.08,'triangle',.025)}else jumpBuffer=Math.max(0,jumpBuffer-dt);
@@ -171,7 +245,7 @@ function updatePepseman(dt){
  if(touch.left)runner.slide=Math.max(runner.slide,.32);
  p.x=clamp(p.x+(touch.right?210:touch.left?-70:0)*dt,70,Math.min(W*.42,250));
  runner.spawn-=dt;runner.canSpawn-=dt;
- if(runner.spawn<=0){const type=Math.random()<.32?'barrier':Math.random()<.5?'cone':'gap';const h=type==='barrier'?52:type==='cone'?38:0;runner.obstacles.push({x:W+35,type,w:type==='barrier'?35:type==='cone'?34:75,h,y:groundY-h,passed:false});runner.spawn=rand(.85,1.45)*Math.max(.62,360/runner.speed)}
+ if(runner.spawn<=0){const type=Math.random()<.32?'barrier':Math.random()<.5?'cone':'gap';const h=type==='barrier'?52:type==='cone'?38:0;runner.obstacles.push({x:W+35,type,w:type==='barrier'?35:type==='cone'?34:75,h,y:groundY-h,passed:false});runner.spawn=rand(.85,1.45)*Math.max(.62,360/runner.speed)*(SETTINGS.difficulty==='hard'?.82:SETTINGS.difficulty==='easy'?1.18:1)}
  if(runner.canSpawn<=0){runner.cans.push({x:W+25,y:groundY-rand(70,150),r:11,got:false,phase:rand(0,6)});runner.canSpawn=rand(.7,1.25)}
  for(const o of runner.obstacles)o.x-=runner.speed*dt;
  for(const can of runner.cans){can.x-=runner.speed*dt;can.phase+=dt*5;if(!can.got&&overlap(p,{x:can.x-10,y:can.y-12,w:20,h:24})){can.got=true;coins++;score+=250;burst(can.x,can.y,'#8de8ff',9);sfx(960,.07,'sine',.025);updateHud()}}
@@ -223,7 +297,7 @@ function makeHeroFrame(frame){
 for(let frame=0;frame<4;frame++)makeHeroFrame(frame);
 function heroFrame(){if(!player)return 0;if(!player.onGround)return 3;if(Math.abs(player.vx)>25)return Math.floor(performance.now()/115)%2+1;return 0}
 function drawBlock(x,y,kind,used=false){if(kind==='question'){ctx.fillStyle=used?'#b68a43':'#ffcc42';ctx.fillRect(x,y,32,32);ctx.fillStyle=used?'#d2aa65':'#fff08a';ctx.fillRect(x+3,y+3,26,4);ctx.fillRect(x+3,y+3,4,26);ctx.fillStyle=used?'#8e6c3c':'#d98124';ctx.fillRect(x+3,y+28,29,4);ctx.fillRect(x+28,y+3,4,29);if(!used){ctx.fillStyle='#fff8cc';ctx.font='bold 24px monospace';ctx.textAlign='center';ctx.fillText('?',x+16,y+24);ctx.textAlign='start'}}else{ctx.fillStyle='#b85b38';ctx.fillRect(x,y,32,32);ctx.fillStyle='#f5a05c';ctx.fillRect(x+2,y+2,28,4);ctx.fillStyle='#783e36';ctx.fillRect(x,y+15,32,3);ctx.fillRect(x+14,y,3,15);ctx.fillRect(x+7,y+18,3,14);ctx.fillRect(x+25,y+18,3,14);ctx.fillStyle='#d9824c';ctx.fillRect(x+3,y+5,10,7);ctx.fillRect(x+18,y+19,5,7)}}
-function draw(){if(gameType==='pepseman'){drawPepseman();return;}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#070d25');sky.addColorStop(.58,'#17254d');sky.addColorStop(1,'#35406b');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);ctx.save();ctx.globalAlpha=.18;ctx.fillStyle='#b9d8ff';ctx.beginPath();ctx.arc(W*.79,H*.19,42,0,Math.PI*2);ctx.fill();ctx.restore();ctx.fillStyle='#f4f0c8';ctx.beginPath();ctx.arc(W*.79,H*.19,25,0,Math.PI*2);ctx.fill();ctx.fillStyle='#c9d6ed';ctx.beginPath();ctx.arc(W*.79+9,H*.19-6,22,0,Math.PI*2);ctx.fill();ctx.fillStyle='#f9f3d6';for(let i=0;i<75;i++){const sx=((i*127+31)%(W-12))+6,sy=((i*71+17)%(Math.max(80,H*.72)));const r=i%9===0?2:1;ctx.globalAlpha=.45+((i*13)%50)/100;ctx.fillRect(sx,sy,r,r);if(i%13===0){ctx.fillRect(sx-3,sy,7,1);ctx.fillRect(sx,sy-3,1,7)}}ctx.globalAlpha=1;
+function draw(){if(mode==='paused'){}if(gameType==='pepseman'){drawPepseman();return;}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#070d25');sky.addColorStop(.58,'#17254d');sky.addColorStop(1,'#35406b');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);ctx.save();ctx.globalAlpha=.18;ctx.fillStyle='#b9d8ff';ctx.beginPath();ctx.arc(W*.79,H*.19,42,0,Math.PI*2);ctx.fill();ctx.restore();ctx.fillStyle='#f4f0c8';ctx.beginPath();ctx.arc(W*.79,H*.19,25,0,Math.PI*2);ctx.fill();ctx.fillStyle='#c9d6ed';ctx.beginPath();ctx.arc(W*.79+9,H*.19-6,22,0,Math.PI*2);ctx.fill();ctx.fillStyle='#f9f3d6';for(let i=0;i<75;i++){const sx=((i*127+31)%(W-12))+6,sy=((i*71+17)%(Math.max(80,H*.72)));const r=i%9===0?2:1;ctx.globalAlpha=.45+((i*13)%50)/100;ctx.fillRect(sx,sy,r,r);if(i%13===0){ctx.fillRect(sx-3,sy,7,1);ctx.fillRect(sx,sy-3,1,7)}}ctx.globalAlpha=1;
  // distant hills and clouds scroll at parallax speed
  for(let i=0;i<8;i++){const x=((i*230-cam*.22)%(W+260)+(W+260))%(W+260)-80,y=H-140-(i%3)*22;ctx.fillStyle=i%2?'#172f4b':'#20385a';ctx.beginPath();ctx.moveTo(x-65,H);ctx.lineTo(x+65,y);ctx.lineTo(x+190,H);ctx.closePath();ctx.fill();ctx.fillStyle='#527b86';ctx.fillRect(x+43,y+25,14,5);ctx.fillRect(x+62,y+9,5,15)}
  for(let i=0;i<5;i++){const x=((i*230-cam*.12)%(W+200)+(W+200))%(W+200)-50;cloud(x,58+(i%3)*38,.7+(i%2)*.22)}
@@ -254,7 +328,11 @@ function draw(){if(gameType==='pepseman'){drawPepseman();return;}ctx.setTransfor
 }
 function loop(t){const frameDt=Math.min(.033,(t-last)/1000||0);last=t;try{accumulator+=frameDt;let steps=0;while(accumulator>=FIXED_DT&&steps<8){update(FIXED_DT);accumulator-=FIXED_DT;steps++}if(steps===8)accumulator=0;draw()}catch(err){console.error('XANVORA game loop:',err);mode='error';ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);ctx.fillStyle='#080f2c';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font='bold 18px system-ui';ctx.textAlign='center';ctx.fillText('GAME ERROR — PLEASE RELOAD',W/2,H/2);ctx.textAlign='start'}requestAnimationFrame(loop)}
 function pressHold(id,key){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();touch[key]=true;el.setPointerCapture?.(e.pointerId)});const up=e=>{touch[key]=false};el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up)}
-pressHold('left','left');pressHold('right','right');function requestJump(e){if(e){e.preventDefault();e.stopPropagation()}if(mode!=='play'||!player)return;/* Queue the request; the physics step decides whether a jump is legal. */jumpQueued=true;jumpBuffer=.16}const jumpBtn=$('jump');jumpBtn.addEventListener('pointerdown',e=>{jumpHeld=true;requestJump(e)},{passive:false});const releaseJump=()=>{jumpHeld=false};jumpBtn.addEventListener('pointerup',releaseJump);jumpBtn.addEventListener('pointercancel',releaseJump);jumpBtn.addEventListener('lostpointercapture',releaseJump);$('start').onclick=()=>{gameType='mushroom';start()};$('startPepseman').onclick=()=>{gameType='pepseman';start()};$('retry').onclick=start;$('again').onclick=start;$('switchGame').onclick=()=>{mode='menu';touch.left=touch.right=false;jumpHeld=false;jumpQueued=false;$('menuTitle').textContent='CHOOSE YOUR GAME';$('menuDesc').textContent='Switch instantly between the platform adventure and the endless soda-run challenge.';hideScreens('menu')};$('musicToggle').onclick=toggleMusic;
+pressHold('left','left');pressHold('right','right');function requestJump(e){if(e){e.preventDefault();e.stopPropagation()}if(mode!=='play'||!player)return;/* Queue the request; the physics step decides whether a jump is legal. */jumpQueued=true;jumpBuffer=.16}const jumpBtn=$('jump');jumpBtn.addEventListener('pointerdown',e=>{jumpHeld=true;requestJump(e)},{passive:false});const releaseJump=()=>{jumpHeld=false};jumpBtn.addEventListener('pointerup',releaseJump);jumpBtn.addEventListener('pointercancel',releaseJump);jumpBtn.addEventListener('lostpointercapture',releaseJump);$('start').onclick=()=>{gameType='mushroom';currentLevel=1;start();announceLevel()};$('startPepseman').onclick=()=>{gameType='pepseman';currentLevel=1;start();announceLevel()};$('retry').onclick=()=>{if(gameType==='mushroom')currentLevel=1;start();announceLevel()};$('again').onclick=()=>{currentLevel=1;start();announceLevel()};$('switchGame').onclick=()=>{mode='menu';touch.left=touch.right=false;jumpHeld=false;jumpQueued=false;$('menuTitle').textContent='CHOOSE YOUR GAME';$('menuDesc').textContent='Switch instantly between the platform adventure and the endless soda-run challenge.';hideScreens('menu')};$('musicToggle').onclick=toggleMusic;
+$('openOptions').onclick=()=>{openOptions()};$('closeOptions').onclick=()=> $('optionsModal').classList.remove('open');$('resumeOptions').onclick=()=>{SETTINGS.difficulty=$('difficultySelect').value;SETTINGS.speed=$('speedSelect').value;SETTINGS.sound=$('soundSelect').value;SETTINGS.particles=$('particleSelect').value;SETTINGS.controls=$('controlSelect').value;soundOn=SETTINGS.sound==='on';$('optionsModal').classList.remove('open');toast('OPTIONS SAVED · '+SETTINGS.speed.toUpperCase());};
+$('pauseButton').onclick=()=>{if(mode==='play'){mode='paused';$('pauseScreen').classList.add('open');$('pauseButton').textContent='▶ RESUME'}else if(mode==='paused'){mode='play';$('pauseScreen').classList.remove('open');$('pauseButton').textContent='Ⅱ PAUSE'}};
+$('resumeGame').onclick=()=>{mode='play';$('pauseScreen').classList.remove('open');$('pauseButton').textContent='Ⅱ PAUSE'};$('pauseOptions').onclick=()=>openOptions();$('quitGame').onclick=()=>{mode='menu';$('pauseScreen').classList.remove('open');$('pauseButton').textContent='Ⅱ PAUSE';hideScreens('menu')};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('optionsModal').classList.contains('open'))$('optionsModal').classList.remove('open');else if(mode==='play')$('pauseButton').click();else if(mode==='paused')$('resumeGame').click();}if((e.key==='p'||e.key==='P')&&mode==='play')$('pauseButton').click();if(mode==='menu'&&e.key==='Enter')$('start').click();});
 resize();buildLevel(true);requestAnimationFrame(loop);
 })();
 </script>
