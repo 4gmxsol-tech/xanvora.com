@@ -48,6 +48,36 @@
 /* XANVORA ARCADE EXPANSION — polished panels, options and responsive HUD */
 
 /* Premium arcade pass: clearer hierarchy, tighter controls, cinematic menu */
+
+/* XANVORA cinematic launch + progression layer */
+#introScreen{position:absolute;inset:0;z-index:22;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:18px;background:radial-gradient(ellipse at 50% 38%,#1d5a78 0%,#102744 35%,#040a18 78%);color:#effaff}
+#introScreen.off{display:none}
+#introScreen:before,#introScreen:after{content:"";position:absolute;pointer-events:none;border:1px solid #8cefff25;border-radius:50%;width:min(78vw,650px);aspect-ratio:1;animation:introOrbit 24s linear infinite}
+#introScreen:after{width:min(58vw,460px);animation-duration:17s;animation-direction:reverse}
+.intro-content{position:relative;z-index:1;width:min(100%,570px);text-align:center;animation:introRise .8s cubic-bezier(.2,.8,.2,1) both}
+.intro-kicker{font-size:10px;letter-spacing:.38em;font-weight:1000;color:#7df5e6}
+.intro-logo{font-size:clamp(48px,10vw,92px);line-height:.95;letter-spacing:.1em;font-weight:1000;margin:15px 0 12px;text-shadow:0 0 28px #56e9f366,0 7px 0 #0a203b}
+.intro-logo span{color:#ffdc80}
+.intro-subtitle{max-width:390px;margin:0 auto 26px;color:#b9d4e9;font-size:13px;line-height:1.8}
+.intro-cta{border:1px solid #c7fff6;background:linear-gradient(115deg,#a0fff0,#66dce8);color:#08223a;border-radius:12px;min-height:50px;padding:0 25px;font-size:12px;font-weight:1000;letter-spacing:.15em;box-shadow:0 5px 0 #258c9a,0 14px 35px #45e4e52a;cursor:pointer;transition:transform .2s,filter .2s}
+.intro-cta:hover{transform:translateY(-3px);filter:brightness(1.06)}
+.intro-foot{margin-top:24px;color:#7199b9;font-size:9px;letter-spacing:.18em}
+#progressModal{position:absolute;inset:0;z-index:45;display:none;align-items:center;justify-content:center;padding:14px;background:#030817e8;backdrop-filter:blur(8px);overflow:auto}
+#progressModal.open{display:flex;animation:veilIn .2s ease both}
+.progress-card{width:min(100%,520px);max-height:92%;overflow:auto;padding:22px;border-radius:20px;background:linear-gradient(145deg,#f8fbff,#e7f0ff);color:#183657;box-shadow:0 22px 80px #0008}
+.progress-card h2{margin:0 0 5px;font-size:24px}.progress-card p{margin:0 0 14px;color:#627790;font-size:12px}
+.progress-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}
+.progress-stat{padding:13px;border:1px solid #c9d9ed;border-radius:12px;background:#fff}
+.progress-stat span{display:block;font-size:9px;font-weight:900;letter-spacing:.1em;color:#6d829a}.progress-stat strong{display:block;margin-top:5px;font-size:24px;color:#183657}
+.achievement-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.achievement{display:flex;align-items:center;gap:10px;padding:11px;border-radius:12px;background:#dce8f7;border:1px solid #c5d7ec;opacity:.58}
+.achievement.unlocked{opacity:1;background:#e4faf4;border-color:#7fdcc6}
+.achievement .medal{font-size:22px}.achievement strong{display:block;font-size:11px}.achievement small{display:block;margin-top:3px;font-size:9px;color:#627790;line-height:1.4}
+@keyframes introRise{from{opacity:0;transform:translateY(20px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes introOrbit{from{transform:rotate(0) scale(.96)}to{transform:rotate(360deg) scale(.96)}}
+@media(max-width:520px){.intro-logo{font-size:clamp(44px,13vw,68px)}.intro-subtitle{font-size:12px}.progress-card{padding:16px}.achievement-list{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){#introScreen:before,#introScreen:after{animation:none}}
+
 :root{--x-cyan:#73f7e6;--x-gold:#ffe18a;--x-ink:#071226;--x-glass:#0a1930}
 body{background:radial-gradient(ellipse at 50% -20%,#214b71 0%,#09162b 48%,#030814 100%);color:#eaf5ff}
 .shell{max-width:1180px;gap:12px}
@@ -71,6 +101,7 @@ body{background:radial-gradient(ellipse at 50% -20%,#214b71 0%,#09162b 48%,#0308
 .help{font-size:10px!important;letter-spacing:.06em;line-height:1.8!important;margin:20px auto 0!important;color:#617995!important}
 .bottom{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:0 5px;color:#7da3c6;font-size:9px;letter-spacing:.16em}
 #pauseButton{border-color:#7bead85c}
+.progress-btn{border:1px solid #83cfff66;border-radius:9px;background:#0a1b36;color:#e7f4ff;padding:8px 10px;font-size:10px;font-weight:900;letter-spacing:.04em;cursor:pointer}
 #optionsModal,#pauseScreen{z-index:40}
 #levelBanner{z-index:8}
 .mobile .ctrl{box-shadow:0 5px 20px #0004}
@@ -144,14 +175,14 @@ canvas{image-rendering:auto}
 @media(max-width:500px){.radar-card{padding:13px}.radar-summary{gap:5px}.radar-stat{padding:8px 4px}.radar-stat strong{font-size:20px}}
 </style></head><body><main class="shell">
 <header class="top"><div><div class="logo"><span>XAN</span>VORA <span style="color:#ed4d3d">◆</span></div><div class="sub">THE XANVORA MUSHROOM RUN</div></div><div class="sub" id="gameSubtitle">MUSHROOM RUN · WORLD 1-1</div></header>
-<section class="hud"><div>SCORE<strong id="score">000000</strong></div><div>COINS<strong id="coins">×00</strong></div><div>GAME<strong id="worldLabel">1-1</strong></div><div>TIME<strong id="time">400</strong></div><div>LIVES<strong id="lives">♥♥♥</strong></div><button id="switchGame" class="music-toggle" aria-label="Switch game">⇄ SWITCH GAME</button><button id="openRdap" class="radar-open" type="button">◎ DOMAIN RADAR</button><button id="musicToggle" class="music-toggle" aria-label="Toggle background music">♫ MUSIC ON</button><button id="pauseButton" class="music-toggle" type="button" aria-label="Pause game">Ⅱ PAUSE</button></section>
+<section class="hud"><div>SCORE<strong id="score">000000</strong></div><div>COINS<strong id="coins">×00</strong></div><div>GAME<strong id="worldLabel">1-1</strong></div><div>TIME<strong id="time">400</strong></div><div>LIVES<strong id="lives">♥♥♥</strong></div><button id="switchGame" class="music-toggle" aria-label="Switch game">⇄ SWITCH GAME</button><button id="openRdap" class="radar-open" type="button">◎ DOMAIN RADAR</button><button id="musicToggle" class="music-toggle" aria-label="Toggle background music">♫ MUSIC ON</button><button id="progressButton" class="progress-btn" type="button" aria-label="Achievements and records">✦ RECORDS</button><button id="pauseButton" class="music-toggle" type="button" aria-label="Pause game">Ⅱ PAUSE</button></section>
 <section class="arena"><canvas id="game" aria-label="Xanvora World 1-1 platform game"></canvas>
 <div class="mobile"><div class="cluster"><button class="ctrl" id="left" aria-label="Move left">◀</button><button class="ctrl" id="right" aria-label="Move right">▶</button></div><button class="ctrl jump" id="jump">JUMP</button></div>
-<div id="levelTransition" class="screen off" aria-live="polite"><div class="panel"><div class="pixel">WORLD CLEAR</div><h1>LEVEL COMPLETE!</h1><p id="transitionText">Preparing the next world…</p></div></div><div class="screen" id="menu"><div class="panel"><div class="pixel">XANVORA ARCADE · CHOOSE YOUR GAME</div><h1 id="menuTitle">MUSHROOM RUN</h1><p id="menuDesc">Choose an adventure. Your two games live inside the same arcade, and you can switch between them at any time.</p><button class="mainbtn" id="start">🍄 MUSHROOM RUN</button><button class="mainbtn" id="startPepseman" style="margin:8px 0 0;background:#147fbd;box-shadow:0 4px 0 #07527f">🥤 PEPSIMAN DASH</button><p class="help" id="menuHelp">MUSHROOM RUN: ARROWS TO MOVE · HOLD JUMP FOR A HIGHER LEAP<br>PEPSIMAN DASH: DODGE OBSTACLES, JUMP AND COLLECT CANS</p></div></div>
+<div id="levelTransition" class="screen off" aria-live="polite"><div class="panel"><div class="pixel">WORLD CLEAR</div><h1>LEVEL COMPLETE!</h1><p id="transitionText">Preparing the next world…</p></div></div><div id="introScreen" role="dialog" aria-label="Xanvora game introduction"><div class="intro-content"><div class="intro-kicker">AN ORIGINAL ARCADE EXPERIENCE</div><div class="intro-logo">XAN<span>V</span>ORA</div><p class="intro-subtitle">Two worlds. One run. Jump into the adventure, master the challenge, and make your mark.</p><button id="enterArcade" class="intro-cta" type="button">ENTER THE ARCADE <span aria-hidden="true">↗</span></button><div class="intro-foot">MUSHROOM RUN · PEPSIMAN DASH · YOUR NEXT HIGH SCORE</div></div></div><div class="screen" id="menu"><div class="panel"><div class="pixel">XANVORA ARCADE · CHOOSE YOUR GAME</div><h1 id="menuTitle">MUSHROOM RUN</h1><p id="menuDesc">Choose an adventure. Your two games live inside the same arcade, and you can switch between them at any time.</p><button class="mainbtn" id="start">🍄 MUSHROOM RUN</button><button class="mainbtn" id="startPepseman" style="margin:8px 0 0;background:#147fbd;box-shadow:0 4px 0 #07527f">🥤 PEPSIMAN DASH</button><p class="help" id="menuHelp">MUSHROOM RUN: ARROWS TO MOVE · HOLD JUMP FOR A HIGHER LEAP<br>PEPSIMAN DASH: DODGE OBSTACLES, JUMP AND COLLECT CANS</p></div></div>
 <div class="screen off" id="dead"><div class="panel"><div class="pixel">OOPS!</div><h1>TRY AGAIN</h1><p id="deadText">You ran out of lives.</p><button class="mainbtn" id="retry">RESTART LEVEL ↻</button></div></div>
 <div class="screen off" id="win"><div class="panel"><div class="pixel">LEVEL CLEAR!</div><h1>YOU DID IT!</h1><p id="winText">You reached the flag!</p><button class="mainbtn" id="again">PLAY AGAIN ↻</button></div></div>
 
-<div id="toast" class="off" role="status" aria-live="polite"></div>
+<div id="progressModal" role="dialog" aria-modal="true" aria-labelledby="progressTitle"><section class="progress-card"><h2 id="progressTitle">YOUR ARCADE LEGACY</h2><p>Every run counts. Beat your records and unlock new milestones.</p><div class="progress-stats"><div class="progress-stat"><span>PERSONAL BEST</span><strong id="bestScore">000000</strong></div><div class="progress-stat"><span>RUNS COMPLETED</span><strong id="runsCount">0</strong></div></div><div class="achievement-list" id="achievementList"></div><div class="option-actions"><button id="closeProgress" class="mainbtn" type="button">BACK TO GAME</button><button id="resetProgress" class="secondary-btn" type="button">RESET RECORDS</button></div></section></div><div id="toast" class="off" role="status" aria-live="polite"></div>
 <div id="levelBanner" hidden><strong>WORLD 2</strong><span>THE CRYSTAL CAVERNS</span></div>
 <div id="optionsModal" role="dialog" aria-modal="true" aria-labelledby="optionsTitle">
  <section class="options-card">
@@ -183,6 +214,13 @@ canvas{image-rendering:auto}
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
 let W=800,H=450,dpr=1,mode='menu',gameType='mushroom',last=0,accumulator=0,cam=0,score=0,coins=0,lives=3,timeLeft=400,timerAcc=0,touch={left:false,right:false},jumpQueued=false,jumpBuffer=0,jumpHeld=false,player,solids=[],blocks=[],coinItems=[],gems=[],hazards=[],enemies=[],particles=[],flag,goalX=0,groundY=400,checkpointX=55,checkpointActive=false,runner={obstacles:[],cans:[],distance:0,speed:310,spawn:0,canSpawn:0,slide:0,flash:0},audio=null,soundOn=true,musicOn=true,musicTimer=null,musicStep=0,stompChain=0,stompTimer=0,landDust=0;
 const SETTINGS={difficulty:'normal',speed:'normal',sound:'on',particles:'on',controls:'modern'};let currentLevel=1,levelTransitionTimer=0,toastTimer=0,shake=0,menuGameType='mushroom';
+const PROGRESS_KEY='xanvora.arcade.progress.v1',ACHIEVEMENTS=[{id:'first_run',icon:'🎮',name:'First Run',desc:'Start your first adventure.'},{id:'coin_collector',icon:'🪙',name:'Treasure Hunter',desc:'Collect 10 coins in a run.'},{id:'world_one',icon:'🌙',name:'World One Clear',desc:'Reach the Crystal Caverns.'},{id:'champion',icon:'🏆',name:'Arcade Champion',desc:'Complete both platform worlds.'},{id:'high_score',icon:'⚡',name:'New Record',desc:'Set a personal best of 5,000+'}];
+function readProgress(){try{return JSON.parse(localStorage.getItem(PROGRESS_KEY))||{best:0,runs:0,achievements:[]}}catch(e){return{best:0,runs:0,achievements:[]}}}
+let progress=readProgress();
+function saveProgress(){try{localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress))}catch(e){}}
+function unlockAchievement(id){if(!progress.achievements.includes(id)){progress.achievements.push(id);saveProgress();const a=ACHIEVEMENTS.find(x=>x.id===id);if(a)toast('ACHIEVEMENT UNLOCKED · '+a.name.toUpperCase());renderProgress()}}
+function renderProgress(){const best=$('bestScore'),runs=$('runsCount'),list=$('achievementList');if(!best||!list)return;best.textContent=String(progress.best||0).padStart(6,'0');runs.textContent=String(progress.runs||0);list.innerHTML=ACHIEVEMENTS.map(a=>'<div class="achievement '+(progress.achievements.includes(a.id)?'unlocked':'')+'"><span class="medal">'+a.icon+'</span><div><strong>'+a.name+'</strong><small>'+a.desc+'</small></div></div>').join('')}
+function recordRun(won){progress.runs=(progress.runs||0)+1;if(score>(progress.best||0)){progress.best=score;if(score>=5000)unlockAchievement('high_score')}if(coins>=10)unlockAchievement('coin_collector');if(won)unlockAchievement('champion');saveProgress();renderProgress()}
 const FIXED_DT=1/120;
 const TILE=32,LEVEL_W=3000,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a);
 function ensureAudio(){try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();return audio}catch(e){return null}}
@@ -227,12 +265,12 @@ function buildLevel(resetPlayer=true){solids=[];blocks=[];coinItems=[];gems=[];h
  goalX=LEVEL_W-125;flag={x:goalX,y:groundY-230};checkpointX=currentLevel===1?1500:1350;
  if(resetPlayer){player={x:55,y:groundY-40,prevY:groundY-40,w:23,h:31,vx:0,vy:0,onGround:false,coyote:0.12,face:1,invuln:0,dead:false};cam=0}
 }
-function start(){const profile=difficultyProfile();score=0;coins=0;lives=profile.lives;timeLeft=profile.time;timerAcc=0;accumulator=0;jumpQueued=false;jumpBuffer=0;jumpHeld=false;touch.left=touch.right=false;if(gameType==='pepseman'){runner={obstacles:[],cans:[],distance:0,speed:310*speedFactor(),spawn:.65,canSpawn:.9,slide:0,flash:0};player={x:Math.min(150,W*.23),y:groundY-42,prevY:groundY-42,w:28,h:40,vy:0,onGround:true,invuln:0,face:1};cam=0;$('worldLabel').textContent='DASH';$('gameSubtitle').textContent='PEPSIMAN DASH · ENDLESS RUN';}else{buildLevel(true);$('worldLabel').textContent=currentLevel===1?'1-1':'2-1';$('gameSubtitle').textContent='MUSHROOM RUN · WORLD '+currentLevel+'-1';}mode='play';hideScreens(null);updateHud();startMusic();sfx(660,.12)}
+function start(){const profile=difficultyProfile();unlockAchievement('first_run');score=0;coins=0;lives=profile.lives;timeLeft=profile.time;timerAcc=0;accumulator=0;jumpQueued=false;jumpBuffer=0;jumpHeld=false;touch.left=touch.right=false;if(gameType==='pepseman'){runner={obstacles:[],cans:[],distance:0,speed:310*speedFactor(),spawn:.65,canSpawn:.9,slide:0,flash:0};player={x:Math.min(150,W*.23),y:groundY-42,prevY:groundY-42,w:28,h:40,vy:0,onGround:true,invuln:0,face:1};cam=0;$('worldLabel').textContent='DASH';$('gameSubtitle').textContent='PEPSIMAN DASH · ENDLESS RUN';}else{buildLevel(true);$('worldLabel').textContent=currentLevel===1?'1-1':'2-1';$('gameSubtitle').textContent='MUSHROOM RUN · WORLD '+currentLevel+'-1';}mode='play';hideScreens(null);updateHud();startMusic();sfx(660,.12)}
 function updateHud(){$('score').textContent=String(score).padStart(6,'0');$('coins').textContent='×'+String(coins).padStart(2,'0');$('lives').textContent='♥'.repeat(lives);$('time').textContent=Math.max(0,Math.ceil(timeLeft))}
 function burst(x,y,color,n=8){if(SETTINGS.particles==='off')return;if(SETTINGS.particles==='reduced')n=Math.max(2,Math.ceil(n*.35));for(let i=0;i<n;i++){const a=rand(0,Math.PI*2),s=rand(35,150);particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(.2,.55),max:.55,color,size:rand(2,4)})}}
 function getRects(){return [...solids,...blocks.map(b=>({x:b.x,y:b.y-(b.bump>0?Math.sin(b.bump*Math.PI)*7:0),w:b.w,h:b.h,ref:b,kind:b.kind}))]}
 function overlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
-function die(){if(player.invuln>0)return;lives--;updateHud();sfx(140,.22,'sawtooth',.04);if(lives<=0){mode='dead';$('deadText').textContent='Score '+String(score).padStart(6,'0')+' · Coins '+coins+'. Give it another go!';hideScreens('dead');return}player.x=checkpointActive?checkpointX:Math.max(35,player.x-90);player.y=groundY-player.h-1;player.prevY=player.y;player.vx=0;player.vy=0;player.onGround=true;player.coyote=.12;player.invuln=1.7;jumpQueued=false;jumpBuffer=0;cam=clamp(player.x-W*.32,0,LEVEL_W-W)}
+function die(){if(player.invuln>0)return;lives--;updateHud();sfx(140,.22,'sawtooth',.04);if(lives<=0){recordRun(false);mode='dead';$('deadText').textContent='Score '+String(score).padStart(6,'0')+' · Coins '+coins+'. Give it another go!';hideScreens('dead');return}player.x=checkpointActive?checkpointX:Math.max(35,player.x-90);player.y=groundY-player.h-1;player.prevY=player.y;player.vx=0;player.vy=0;player.onGround=true;player.coyote=.12;player.invuln=1.7;jumpQueued=false;jumpBuffer=0;cam=clamp(player.x-W*.32,0,LEVEL_W-W)}
 function collectCoin(c){if(c.got)return;c.got=true;coins++;score+=200;burst(c.x,c.y,'#ffe46b',7);sfx(920,.07,'square',.02);updateHud()}
 function collectGem(g){if(g.got)return;g.got=true;score+=750;burst(g.x,g.y,'#62f4e4',12);sfx(1120,.14,'triangle',.035);updateHud()}
 function bumpBlock(b){if(b.used&&b.kind==='question')return;b.bump=1;if(b.content==='coin'){score+=200;coins++;burst(b.x+16,b.y-10,'#ffe46b',8);sfx(900,.08)}else if(b.content==='mushroom'){score+=1000;burst(b.x+16,b.y-8,'#ff795f',8);sfx(600,.12)}if(b.kind==='question')b.used=true;updateHud()}
@@ -267,7 +305,7 @@ stompTimer=Math.max(0,stompTimer-dt);if(stompTimer<=0)stompChain=0;landDust=Math
 for(const a of particles){a.x+=a.vx*dt;a.y+=a.vy*dt;a.vy+=260*dt;a.life-=dt}particles=particles.filter(a=>a.life>0);
 cam=clamp(p.x-W*.34,0,LEVEL_W-W);
 if(!checkpointActive&&p.x+p.w>=checkpointX){checkpointActive=true;score+=500;burst(checkpointX,groundY-34,'#72f4dc',14);sfx(760,.16,'triangle',.035);updateHud()}
-if(p.x+p.w>=goalX){if(currentLevel===1){score+=Math.max(0,timeLeft)*10;currentLevel=2;mode='transition';levelTransitionTimer=2.0;$('transitionText').textContent='World 1 cleared! World 2 introduces tighter jumps, new hazards and a fresh route.';hideScreens('levelTransition');burst(p.x,p.y,'#64f5e5',24);sfx(780,.3,'triangle',.04);return;}mode='win';score+=Math.max(0,timeLeft)*10;updateHud();$('winText').textContent='Final score '+String(score).padStart(6,'0')+' · Coins '+coins+' · You cleared both worlds!';hideScreens('win');sfx(780,.3,'triangle',.04)}
+if(p.x+p.w>=goalX){if(currentLevel===1){score+=Math.max(0,timeLeft)*10;currentLevel=2;unlockAchievement('world_one');mode='transition';levelTransitionTimer=2.0;$('transitionText').textContent='World 1 cleared! World 2 introduces tighter jumps, new hazards and a fresh route.';hideScreens('levelTransition');burst(p.x,p.y,'#64f5e5',24);sfx(780,.3,'triangle',.04);return;}mode='win';score+=Math.max(0,timeLeft)*10;recordRun(true);updateHud();$('winText').textContent='Final score '+String(score).padStart(6,'0')+' · Coins '+coins+' · You cleared both worlds!';hideScreens('win');sfx(780,.3,'triangle',.04)}
 }
 
 // PEPSEMAN DASH: a separate endless-runner mode with original canvas-drawn art.
@@ -369,7 +407,12 @@ $('closeOptions').onclick=()=> $('optionsModal').classList.remove('open');$('res
 $('pauseButton').onclick=()=>{if(mode==='play'){mode='paused';$('pauseScreen').classList.add('open');$('pauseButton').textContent='▶ RESUME'}else if(mode==='paused'){mode='play';$('pauseScreen').classList.remove('open');$('pauseButton').textContent='Ⅱ PAUSE'}};
 $('resumeGame').onclick=()=>{mode='play';$('pauseScreen').classList.remove('open');$('pauseButton').textContent='Ⅱ PAUSE'};$('pauseOptions').onclick=()=>openOptions();$('quitGame').onclick=()=>{mode='menu';$('pauseScreen').classList.remove('open');$('pauseButton').textContent='Ⅱ PAUSE';hideScreens('menu')};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('optionsModal').classList.contains('open'))$('optionsModal').classList.remove('open');else if(mode==='play')$('pauseButton').click();else if(mode==='paused')$('resumeGame').click();}if((e.key==='p'||e.key==='P')&&mode==='play')$('pauseButton').click();if(mode==='menu'&&e.key==='Enter')$('start').click();});
-resize();buildLevel(true);requestAnimationFrame(loop);
+$('enterArcade').onclick=()=>{$('introScreen').classList.add('off');hideScreens('menu');toast('WELCOME TO XANVORA')};
+$('progressButton').onclick=()=>{renderProgress();$('progressModal').classList.add('open')};
+$('closeProgress').onclick=()=> $('progressModal').classList.remove('open');
+$('resetProgress').onclick=()=>{progress={best:0,runs:0,achievements:[]};saveProgress();renderProgress();toast('RECORDS RESET')};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('progressModal').classList.contains('open'))$('progressModal').classList.remove('open')});
+renderProgress();resize();buildLevel(true);requestAnimationFrame(loop);
 })();
 </script>
 <script id="xanvora-direct-rdap">
