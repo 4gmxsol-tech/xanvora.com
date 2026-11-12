@@ -94,8 +94,8 @@ function updateMap(){
  c.save();c.translate(s/2,s/2);c.rotate(-yaw);c.fillStyle='#fff';c.beginPath();c.moveTo(0,-10);c.lineTo(7,8);c.lineTo(0,5);c.lineTo(-7,8);c.closePath();c.fill();c.restore();
 }
 function makeEnemy(x,z,elite=false){
- const g=createDroneVisual(THREE,elite);
- g.position.set(x,0,z);scene.add(g);const e={group:g,hp:elite?5:2,max:elite?5:2,elite,speed:elite?5.2:3.6,phase:Math.random()*6,fire:2+Math.random()*2};enemies.push(e);return e;
+ const g=createDroneVisual(THREE,elite),rotors=[];g.traverse(o=>{if(o.userData.spinRotor)rotors.push(o)});
+ g.position.set(x,0,z);scene.add(g);const e={group:g,rotors,hp:elite?5:2,max:elite?5:2,elite,speed:elite?5.2:3.6,phase:Math.random()*6,fire:2+Math.random()*2};enemies.push(e);return e;
 }
 function makeBoss(){
  const g=new THREE.Group();const core=new THREE.Mesh(new THREE.DodecahedronGeometry(5,1),material(0x9d1a82,0xff00bd));core.position.y=6;core.castShadow=true;g.add(core);
@@ -134,7 +134,7 @@ function update(dt){
  if(spawnTimer<=0&&enemies.length<28){const a=Math.random()*Math.PI*2,r=THREE.MathUtils.randFloat(45,105);makeEnemy(player.position.x+Math.cos(a)*r,player.position.z+Math.sin(a)*r,Math.random()<.16);spawnTimer=Math.max(.55,1.6-enemies.length*.025)}
  if(bossTimer<=0&&!boss){makeBoss();bossTimer=145}
  for(const e of [...enemies]){
-  e.phase+=dt*2;e.fire-=dt;const d=V(player.position.x-e.group.position.x,0,player.position.z-e.group.position.z),len=d.length();
+  e.phase+=dt*2;e.fire-=dt;for(const rotor of e.rotors)rotor.rotation.z+=dt*24;const d=V(player.position.x-e.group.position.x,0,player.position.z-e.group.position.z),len=d.length();
   if(len>2.5)e.group.position.addScaledVector(d.normalize(),e.speed*dt);
   e.group.position.y=.18+Math.sin(e.phase)*.35;e.group.rotation.y+=dt*.8;
   if(len<2.7){damagePlayer(e.elite?17:9);e.group.position.addScaledVector(d.normalize(),-3)}
