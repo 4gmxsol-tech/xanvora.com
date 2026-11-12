@@ -148,5 +148,63 @@ update=function(dt){
 const oldDraw=draw;
 draw=function(t){oldDraw(t);for(const s of combat.shots){ctx.save();ctx.shadowColor='#00f5ff';ctx.shadowBlur=15;ctx.fillStyle='#dfffff';ctx.fillRect(s.x-9,s.y-2,18,4);ctx.restore()}for(const s of combat.enemyShots){ctx.save();ctx.shadowColor='#ff00aa';ctx.shadowBlur=18;ctx.fillStyle='#ff6bd5';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();ctx.restore()}const b=combat.boss;if(b){ctx.save();ctx.translate(b.x,b.y);ctx.shadowColor='#ff00cc';ctx.shadowBlur=30;ctx.fillStyle=b.flash>0?'#fff':'#9b236e';ctx.strokeStyle='#ff6de0';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-38,-28);ctx.lineTo(-12,-48);ctx.lineTo(30,-37);ctx.lineTo(48,-5);ctx.lineTo(32,34);ctx.lineTo(-25,42);ctx.lineTo(-48,8);ctx.closePath();ctx.fill();ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.fillRect(-23,-9,13,7);ctx.fillRect(13,-9,13,7);ctx.fillStyle='#190b28';ctx.fillRect(-10,13,20,5);ctx.restore()}};
 
+
+/* Continuous-fire input + pseudo-3D neon arena rendering. */
+let fireHeld=false;
+function beginFire(e){if(e)e.preventDefault();fireHeld=true;fire();if(e&&fireBtn.setPointerCapture&&e.pointerId!==undefined)fireBtn.setPointerCapture(e.pointerId)}
+function endFire(){fireHeld=false}
+fireBtn.removeEventListener('pointerdown',()=>{});
+fireBtn.addEventListener('pointerdown',beginFire);
+['pointerup','pointercancel','lostpointercapture','pointerleave'].forEach(ev=>fireBtn.addEventListener(ev,endFire));
+addEventListener('pointerup',endFire);
+addEventListener('pointercancel',endFire);
+addEventListener('keydown',e=>{if(e.code==='KeyX'||e.code==='KeyZ'){if(!e.repeat)fireHeld=true}});
+addEventListener('keyup',e=>{if(e.code==='KeyX'||e.code==='KeyZ')endFire()});
+addEventListener('blur',endFire);
+const previousStart=start;
+start=function(){endFire();previousStart()};
+const previousCombatUpdate=update;
+update=function(dt){
+ previousCombatUpdate(dt);
+ if(state==='PLAYING'&&fireHeld&&combat.fireCooldown<=0)fire();
+};
+const previousCombatDraw=draw;
+function drawPseudo3D(){
+ const horizon=ground-120,vanX=W*.52;
+ ctx.save();
+ // A perspective arena with converging lanes and luminous floor rails.
+ ctx.beginPath();ctx.moveTo(vanX-24,horizon);ctx.lineTo(W*.98,H);ctx.lineTo(W*.02,H);ctx.lineTo(vanX+24,horizon);ctx.closePath();
+ ctx.fillStyle='rgba(0,245,255,.035)';ctx.fill();
+ ctx.strokeStyle='rgba(0,245,255,.24)';ctx.lineWidth=1;
+ for(let i=-5;i<=5;i++){
+  ctx.beginPath();ctx.moveTo(vanX+i*5,horizon);ctx.lineTo(vanX+i*W*.105,H);ctx.stroke();
+ }
+ const scroll=(dist*.72)%1;
+ for(let i=0;i<15;i++){
+  const q=(i/15+scroll/15)%1;
+  const y=horizon+(H-horizon)*q*q;
+  const half=24+(W*.48-24)*q*q;
+  ctx.strokeStyle='rgba(0,245,255,'+(0.06+q*.23)+')';
+  ctx.beginPath();ctx.moveTo(vanX-half,y);ctx.lineTo(vanX+half,y);ctx.stroke();
+ }
+ // Beveled 3D energy core replacing the flat orb impression.
+ const px=player.x,py=player.y,sz=player.r*1.08;
+ ctx.save();ctx.translate(px,py);ctx.rotate(player.rotation*.35);
+ ctx.shadowColor='#00f5ff';ctx.shadowBlur=24;
+ ctx.fillStyle='#00aebe';ctx.beginPath();ctx.moveTo(-sz,-sz*.45);ctx.lineTo(0,-sz*1.25);ctx.lineTo(sz,-sz*.45);ctx.lineTo(sz,sz*.65);ctx.lineTo(0,sz*1.15);ctx.lineTo(-sz,sz*.65);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#eaffff';ctx.beginPath();ctx.moveTo(-sz,-sz*.45);ctx.lineTo(0,-sz*1.25);ctx.lineTo(0,sz*.05);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#ff35d7';ctx.beginPath();ctx.moveTo(0,-sz*1.25);ctx.lineTo(sz,-sz*.45);ctx.lineTo(0,sz*.05);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#07203b';ctx.beginPath();ctx.moveTo(-sz,sz*.65);ctx.lineTo(0,sz*.05);ctx.lineTo(sz,sz*.65);ctx.lineTo(0,sz*1.15);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#fff';ctx.fillRect(-4,-3,8,6);ctx.restore();
+ // Depth extrusion on the titan gives the boss a dimensional silhouette.
+ const b=combat.boss;if(b){
+  ctx.save();ctx.translate(b.x,b.y);
+  ctx.fillStyle='rgba(48,5,65,.9)';ctx.beginPath();ctx.moveTo(-40,-28);ctx.lineTo(-14,-49);ctx.lineTo(33,-37);ctx.lineTo(52,-5);ctx.lineTo(38,37);ctx.lineTo(-25,45);ctx.lineTo(-52,9);ctx.closePath();ctx.fill();
+  ctx.fillStyle='rgba(255,0,190,.3)';ctx.beginPath();ctx.moveTo(33,-37);ctx.lineTo(52,-5);ctx.lineTo(38,37);ctx.lineTo(22,25);ctx.lineTo(30,-4);ctx.closePath();ctx.fill();ctx.restore();
+ }
+ ctx.restore();
+}
+draw=function(t){previousCombatDraw(t);drawPseudo3D()};
+
 })();
 </script></body></html>
