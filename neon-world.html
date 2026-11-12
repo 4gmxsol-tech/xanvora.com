@@ -134,13 +134,13 @@ function update(dt){
 function render(){renderer.render(scene,camera)}
 function animate(){
  requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);if(!paused)update(dt);render();
- fpsFrames++;fpsTime+=dt;if(fpsTime>=.5){$('fps').textContent=Math.round(fpsFrames/fpsTime);fpsFrames=0;fpsTime=0}
+ fpsFrames++;fpsTime+=dt;if(fpsTime>=1){const measured=fpsFrames/fpsTime;$('fps').textContent=Math.round(measured);if(measured<48&&renderScale>.75){renderScale=Math.max(.75,renderScale-.1);renderer.setPixelRatio(Math.min(devicePixelRatio||1,renderScale));renderer.setSize(innerWidth,innerHeight,false)}else if(measured>105&&renderScale<1.5){renderScale=Math.min(1.5,renderScale+.05);renderer.setPixelRatio(Math.min(devicePixelRatio||1,renderScale));renderer.setSize(innerWidth,innerHeight,false)}fpsFrames=0;fpsTime=0}
 }
 function resize(){if(!renderer)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio||1,renderScale));renderer.setSize(innerWidth,innerHeight)}
 function setFire(v){fireHeld=v;if(v)fire()}
 $('start').onclick=()=>{$('menu').classList.add('hide');paused=false;clock.getDelta();say('EXPLORE THE FRONTIER')};
 $('retry').onclick=()=>{location.reload()};
-$('fire').addEventListener('pointerdown',e=>{e.preventDefault();setFire(true);$('fire').setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>$('fire').addEventListener(ev,()=>setFire(false)));
+$('fire').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();setFire(true);$('fire').setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>$('fire').addEventListener(ev,()=>setFire(false)));
 addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Space'){e.preventDefault();setFire(true)}if(e.code==='KeyP'&&!e.repeat)paused=!paused});
 addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='Space')setFire(false)});
 root.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0)setFire(true);if(e.button===2||e.pointerType==='touch'){dragLook=true;lastPointer={x:e.clientX,y:e.clientY}}});
@@ -148,7 +148,7 @@ addEventListener('pointerup',e=>{if(e.pointerType==='mouse'&&e.button===0)setFir
 addEventListener('pointermove',e=>{if(dragLook){yaw-=(e.clientX-lastPointer.x)*.006;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-lastPointer.y)*.003,-.65,.42);lastPointer={x:e.clientX,y:e.clientY}}});
 addEventListener('contextmenu',e=>e.preventDefault());
 const stick=$('stick'),knob=$('knob');let stickId=null;
-stick.addEventListener('pointerdown',e=>{stickId=e.pointerId;stick.setPointerCapture(e.pointerId);moveStick(e)});
+stick.addEventListener('pointerdown',e=>{e.stopPropagation();stickId=e.pointerId;stick.setPointerCapture(e.pointerId);moveStick(e)});
 stick.addEventListener('pointermove',e=>{if(e.pointerId===stickId)moveStick(e)});
 function moveStick(e){const r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,len=Math.hypot(dx,dy),max=42,k=Math.min(1,max/(len||1));joy.x=dx*k/max;joy.y=dy*k/max;knob.style.transform='translate('+dx*k+'px,'+dy*k+'px)'}
 function resetStick(){stickId=null;joy={x:0,y:0};knob.style.transform='translate(0,0)'}
