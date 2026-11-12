@@ -109,5 +109,44 @@ $('refreshRanks').addEventListener('click',loadRanks);
 $('playerName').addEventListener('change',e=>{hub.name=e.target.value.trim().slice(0,18)||'Rookie';saveHub();updateHub()});
 $('skinChoices').addEventListener('click',e=>{const b=e.target.closest('[data-skin]');if(!b||!hub.unlocked.includes(b.dataset.skin))return;hub.skin=b.dataset.skin;saveHub();updateHub()});
 $('shareBest').addEventListener('click',async()=>{const msg='I scored '+(hub.best||Math.floor(score))+' in NEON DASH on Xanvora! Can you beat me? https://xanvora.com/neon-dash.html';try{if(navigator.share)await navigator.share({title:'NEON DASH challenge',text:msg});else if(navigator.clipboard){await navigator.clipboard.writeText(msg);toast('CHALLENGE LINK COPIED')}else prompt('Copy your challenge:',msg)}catch{}});
+
+/* Arcade combat layer: recurring boss encounters, player blaster and telegraphed attacks. */
+const combat={boss:null,shots:[],enemyShots:[],nextBoss:1800,fireCooldown:0,hitFlash:0};
+const fireBtn=document.createElement('button');
+fireBtn.id='fire';fireBtn.className='fire';fireBtn.textContent='FIRE';
+const mobileControls=document.querySelector('.mobile');if(mobileControls)mobileControls.appendChild(fireBtn);
+const style=document.createElement('style');style.textContent='.mobile .fire{width:76px;border-radius:16px;background:#3b1b58c9;border-color:#ff70e8;color:#fff}.boss-hud{position:absolute;top:78px;left:50%;transform:translateX(-50%);width:min(320px,72vw);display:none;text-align:center;pointer-events:none}.boss-hud.show{display:block}.boss-title{font-size:10px;letter-spacing:.2em;color:#ff83ef;text-shadow:0 0 12px #ff00ff}.boss-track{height:9px;margin-top:6px;border:1px solid #ff8bed;border-radius:20px;background:#170d2b;overflow:hidden}.boss-fill{height:100%;width:100%;background:linear-gradient(90deg,#ff00aa,#ff8cda);box-shadow:0 0 14px #ff00aa;transition:width .12s}.boss-warning{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);font-size:clamp(20px,5vw,38px);font-weight:900;letter-spacing:.15em;color:#ff73df;text-shadow:0 0 25px #ff00aa;pointer-events:none;animation:bossPulse .45s infinite alternate}.boss-warning.off{display:none}@keyframes bossPulse{to{transform:translate(-50%,-50%) scale(1.08);opacity:.65}}';
+document.head.appendChild(style);
+const bossHud=document.createElement('div');bossHud.className='boss-hud';bossHud.innerHTML='<div class="boss-title">⚠ NEON TITAN · CORE INTEGRITY</div><div class="boss-track"><div class="boss-fill"></div></div>';document.querySelector('.game').appendChild(bossHud);
+const bossWarning=document.createElement('div');bossWarning.className='boss-warning off';bossWarning.textContent='BOSS INCOMING';document.querySelector('.game').appendChild(bossWarning);
+function fire(){if(state!=='PLAYING'||combat.fireCooldown>0)return;combat.fireCooldown=.19;combat.shots.push({x:player.x+22,y:player.y,vx:780,life:1.1});audio.tone(620,.045,'square',.055,240)}
+fireBtn.addEventListener('pointerdown',e=>{e.preventDefault();fire()});
+addEventListener('keydown',e=>{if(e.code==='KeyX'||e.code==='KeyZ')fire()});
+const oldStart=start;
+start=function(){oldStart();combat.boss=null;combat.shots.length=0;combat.enemyShots.length=0;combat.nextBoss=1800;bossHud.classList.remove('show');bossWarning.classList.add('off')};
+const oldUpdate=update;
+update=function(dt){
+ oldUpdate(dt);
+ if(state!=='PLAYING')return;
+ combat.fireCooldown=Math.max(0,combat.fireCooldown-dt);combat.hitFlash=Math.max(0,combat.hitFlash-dt);
+ if(!combat.boss&&score>=combat.nextBoss){
+  combat.boss={x:W+100,y:H*.34,hp:14,max:14,phase:0,attack:1.25,flash:0};
+  combat.nextBoss+=2200;bossWarning.classList.remove('off');setTimeout(()=>bossWarning.classList.add('off'),1250);
+  toast('⚠ NEON TITAN APPROACHING');audio.power();
+ }
+ const b=combat.boss;
+ if(b){
+  b.x=lerp(b.x,W-105,1-Math.exp(-2.2*dt));b.phase+=dt*2.1;b.y=H*.34+Math.sin(b.phase)*Math.min(75,H*.1);b.attack-=dt;b.flash=Math.max(0,b.flash-dt);
+  if(b.attack<=0&&b.x<W+10){b.attack=Math.max(.58,1.15-level*.025);combat.enemyShots.push({x:b.x-35,y:b.y,vx:-rand(330,440),vy:rand(-90,90),r:9,life:2.4})}
+  for(const s of combat.shots){s.x+=s.vx*dt;s.life-=dt;if(Math.hypot(s.x-b.x,s.y-b.y)<43){s.life=0;b.hp--;b.flash=.12;pool.burst(s.x,s.y,5,'#00f5ff',.45);audio.tone(190,.05,'square',.06,100);if(b.hp<=0){score+=650;coins+=5;pool.burst(b.x,b.y,65,'#ff00dd',1.6);toast('TITAN DESTROYED · +650 BONUS');audio.record();combat.boss=null;bossHud.classList.remove('show');bossWarning.classList.add('off')}}}
+  bossHud.classList.toggle('show',!!combat.boss);bossHud.querySelector('.boss-fill').style.width=(Math.max(0,b.hp)/b.max*100)+'%';
+ }
+ for(const s of combat.shots){if(!b||s.life<=0){s.x+=s.vx*dt;s.life-=dt}}
+ for(const s of combat.enemyShots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(Math.hypot(s.x-player.x,s.y-player.y)<s.r+player.r){s.life=0;if(player.shield>0||player.invincible>0){pool.burst(s.x,s.y,10,'#00ff88')}else{die();break}}}
+ combat.shots=combat.shots.filter(s=>s.life>0&&s.x<W+40);combat.enemyShots=combat.enemyShots.filter(s=>s.life>0&&s.x>-40);
+};
+const oldDraw=draw;
+draw=function(t){oldDraw(t);for(const s of combat.shots){ctx.save();ctx.shadowColor='#00f5ff';ctx.shadowBlur=15;ctx.fillStyle='#dfffff';ctx.fillRect(s.x-9,s.y-2,18,4);ctx.restore()}for(const s of combat.enemyShots){ctx.save();ctx.shadowColor='#ff00aa';ctx.shadowBlur=18;ctx.fillStyle='#ff6bd5';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();ctx.restore()}const b=combat.boss;if(b){ctx.save();ctx.translate(b.x,b.y);ctx.shadowColor='#ff00cc';ctx.shadowBlur=30;ctx.fillStyle=b.flash>0?'#fff':'#9b236e';ctx.strokeStyle='#ff6de0';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-38,-28);ctx.lineTo(-12,-48);ctx.lineTo(30,-37);ctx.lineTo(48,-5);ctx.lineTo(32,34);ctx.lineTo(-25,42);ctx.lineTo(-48,8);ctx.closePath();ctx.fill();ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.fillRect(-23,-9,13,7);ctx.fillRect(13,-9,13,7);ctx.fillStyle='#190b28';ctx.fillRect(-10,13,20,5);ctx.restore()}};
+
 })();
 </script></body></html>
