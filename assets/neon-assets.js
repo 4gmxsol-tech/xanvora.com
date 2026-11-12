@@ -72,7 +72,7 @@ export function createDroneVisual(THREE, elite=false) {
     const pod = new THREE.Mesh(new THREE.CylinderGeometry(.34,.42,.42,8),darkMat);
     pod.position.set(x,1.25,z); pod.castShadow=true; g.add(pod);
     const rotor = new THREE.Mesh(new THREE.TorusGeometry(.38,.045,6,18),glowMat);
-    rotor.rotation.x=Math.PI/2; rotor.position.copy(pod.position); g.add(rotor);
+    rotor.rotation.x=Math.PI/2; rotor.position.copy(pod.position); rotor.userData.spinRotor=true; g.add(rotor);
   }
   const under = new THREE.PointLight(elite?0xff7900:0xff00c8,4,10);
   under.position.y=.2; g.add(under);
