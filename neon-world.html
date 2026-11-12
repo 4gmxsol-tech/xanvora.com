@@ -143,7 +143,7 @@ $('retry').onclick=()=>{location.reload()};
 $('fire').addEventListener('pointerdown',e=>{e.preventDefault();setFire(true);$('fire').setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>$('fire').addEventListener(ev,()=>setFire(false)));
 addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Space'){e.preventDefault();setFire(true)}if(e.code==='KeyP'&&!e.repeat)paused=!paused});
 addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='Space')setFire(false)});
-renderer?.domElement.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0)setFire(true);if(e.button===2||e.pointerType==='touch'){dragLook=true;lastPointer={x:e.clientX,y:e.clientY}}});
+root.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0)setFire(true);if(e.button===2||e.pointerType==='touch'){dragLook=true;lastPointer={x:e.clientX,y:e.clientY}}});
 addEventListener('pointerup',e=>{if(e.pointerType==='mouse'&&e.button===0)setFire(false);dragLook=false});
 addEventListener('pointermove',e=>{if(dragLook){yaw-=(e.clientX-lastPointer.x)*.006;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-lastPointer.y)*.003,-.65,.42);lastPointer={x:e.clientX,y:e.clientY}}});
 addEventListener('contextmenu',e=>e.preventDefault());
