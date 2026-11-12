@@ -7,9 +7,9 @@
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/"}}</script></head>
 <body><div id="view"></div>
-<div id="hud"><div class="top"><div class="pill">ZONE <b id="zone">NEON WILDS</b></div><div class="pill">SCORE <b id="score">0</b></div><div class="pill">KILLS <b id="kills">0</b></div><div class="pill">FPS <b id="fps">—</b></div></div><div class="health"><i id="hp"></i></div><div class="map"><canvas id="map" width="328" height="328"></canvas></div><div class="boss" id="boss"><span>VOID COLOSSUS</span><div class="bossbar"><i id="bossHp"></i></div></div><div class="cross">＋</div><div class="toast" id="toast"></div><div class="help">WASD / ARROWS · MOVE<br>HOLD LEFT CLICK / SPACE · FIRE<br>DRAG MOUSE · ORBIT CAMERA<br>SHIFT · SPRINT · P · PAUSE</div></div>
+<div id="hud"><div class="top"><div class="pill">ZONE <b id="zone">NEON WILDS</b></div><div class="pill">SCORE <b id="score">0</b></div><div class="pill">KILLS <b id="kills">0</b></div><div class="pill">FPS <b id="fps">—</b></div></div><div class="health"><i id="hp"></i></div><div class="map"><canvas id="map" width="328" height="328"></canvas></div><div class="boss" id="boss"><span>VOID COLOSSUS</span><div class="bossbar"><i id="bossHp"></i></div></div><div class="cross">＋</div><div class="toast" id="toast"></div><div class="help">W / S · ACCELERATE / REVERSE<br>A / D · STEER · SHIFT · BOOST<br>HOLD LEFT CLICK / SPACE · FIRE<br>DRAG MOUSE · ORBIT CAMERA<br>SHIFT · SPRINT · P · PAUSE</div></div>
 <div class="mobile" id="mobile"><div class="stick" id="stick"><div class="knob" id="knob"></div></div><button class="fire" id="fire">FIRE</button></div><div class="mobileTip">Drag screen to look around</div>
-<section class="overlay" id="menu"><div class="card"><div class="eyebrow">XANVORA PRESENTS · OPEN WORLD COMBAT</div><h1>NEON<br><span style="color:#ff43d1">FRONTIER</span></h1><p>Drive a high-performance neon interceptor across a vast wilderness. Fight roaming drones, discover outposts, survive ambushes and hunt the Void Colossus. The world continues beyond the horizon.</p><img class="car-preview" src="https://hidencod.github.io/tge-assets/packs/car-kit/thumbs/race-future.webp" alt="Kenney race car 3D asset preview"><button class="btn primary" id="start">ENTER THE WORLD</button><p>Desktop: WASD + mouse · Mobile: virtual joystick + FIRE · Hold to keep firing.</p></div></section>
+<section class="overlay" id="menu"><div class="card"><div class="eyebrow">XANVORA PRESENTS · OPEN WORLD COMBAT</div><h1>NEON<br><span style="color:#ff43d1">FRONTIER</span></h1><p>Drive a high-performance neon interceptor across a vast wilderness. Fight roaming drones, discover outposts, survive ambushes and hunt the Void Colossus. The world continues beyond the horizon.</p><img class="car-preview" src="https://hidencod.github.io/tge-assets/packs/car-kit/thumbs/race-future.webp" alt="Kenney race car 3D asset preview"><button class="btn primary" id="start">ENTER THE WORLD</button><p>Drive: W/S throttle, A/D steering · Mobile: joystick + FIRE · Hold to keep firing.</p></div></section>
 <section class="overlay hide" id="dead"><div class="card"><div class="eyebrow">SIGNAL LOST</div><h1>YOU FELL</h1><p id="endStats">Your expedition has ended.</p><button class="btn primary" id="retry">RESPAWN</button></div></section>
 <script type="module">
 import * as THREE from 'three';
@@ -42,9 +42,8 @@ function loadPlayerCar(){
  loader.load('https://hidencod.github.io/tge-assets/packs/car-kit/race-future.glb',gltf=>{
   const car=gltf.scene;
   const bounds=new THREE.Box3().setFromObject(car),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
-  car.position.sub(center);
   const scale=5.4/Math.max(size.x,size.z);car.scale.setScalar(scale);
-  car.position.y=-bounds.min.y*scale+.08;
+  car.position.set(-center.x*scale,-bounds.min.y*scale+.08,-center.z*scale);
   car.traverse(o=>{
    if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}
    if(/wheel|tire|tyre/i.test(o.name)){carWheels.push(o);}
@@ -121,10 +120,12 @@ function update(dt){
  if(paused||dead)return;worldTime+=dt;fireTimer=Math.max(0,fireTimer-dt);spawnTimer-=dt;bossTimer-=dt;
  const forward=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-joy.y;
  const side=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+joy.x;
- const v=V(side,0,-forward);if(v.lengthSq()>1)v.normalize();const sprint=keys.ShiftLeft||keys.ShiftRight?1.65:1;v.applyAxisAngle(V(0,1,0),yaw);
- carSpeed=THREE.MathUtils.lerp(carSpeed,v.lengthSq()>.001?19*sprint:0,1-Math.exp(-5*dt));player.position.addScaledVector(v,carSpeed*dt);player.position.y=0;
+ const sprint=keys.ShiftLeft||keys.ShiftRight?1.45:1;
+ carSpeed=THREE.MathUtils.lerp(carSpeed,forward*19*sprint,1-Math.exp(-3.8*dt));
+ if(Math.abs(carSpeed)>.25)player.rotation.y-=side*dt*1.85*Math.sign(carSpeed)*Math.min(1,Math.abs(carSpeed)/7);
+ const driveDir=V(-Math.sin(player.rotation.y),0,-Math.cos(player.rotation.y));
+ player.position.addScaledVector(driveDir,carSpeed*dt);player.position.y=0;
  for(const wheel of carWheels)wheel.rotation.x-=carSpeed*dt*1.9;
- if(v.lengthSq()>.01){const face=Math.atan2(-v.x,-v.z);player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,face,1-Math.exp(-12*dt))}
  if(fireHeld&&fireTimer<=0)fire();
  // Smooth third-person follow camera; mouse/touch drag exposes a full 360-degree view.
  const look=V(player.position.x,player.position.y+1.5,player.position.z);
