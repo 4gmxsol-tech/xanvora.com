@@ -18,7 +18,7 @@
 <body>
 <div id="game"></div>
 <div id="loading">LOADING WORLD ASSETS · 0%</div>
-<div id="hud"><div class="top"><div class="brand">NEON OUTLANDS <span style="color:#fff">/ SURVIVAL DRIVE</span></div><div class="stats"><div class="stat">SCORE<b id="score">0000</b></div><div class="stat">CRYSTALS<b id="crystals">0</b></div><div class="stat">SPEED<b id="speed">0</b></div></div></div><div class="health"><i id="healthbar"></i></div><div class="crosshair"></div><div class="mission"><strong>MISSION 01 · THE LOST HIGHWAY</strong>Collect energy crystals. Clear the road of hostile creatures. Stay alive.</div></div>
+<div id="hud"><div class="top"><div class="brand">NEON OUTLANDS <span style="color:#fff">/ SURVIVAL DRIVE</span></div><div class="stats"><div class="stat">SCORE<b id="score">0000</b></div><div class="stat">CRYSTALS<b id="crystals">0</b></div><div class="stat">SPEED<b id="speed">0</b></div><div class="stat">ZONE<b id="stage">01</b></div></div></div><div class="health"><i id="healthbar"></i></div><div class="crosshair"></div><div class="mission"><strong>MISSION 01 · THE LOST HIGHWAY</strong>Collect energy crystals. Clear the road of hostile creatures. Stay alive.</div></div>
 <div id="touch"><div class="pad"><button class="touchbtn" data-key="ArrowLeft">◀</button><button class="touchbtn" data-key="ArrowRight">▶</button></div><div class="pad"><button class="touchbtn boost" data-key="ShiftLeft">⚡</button><button class="touchbtn" data-key="ArrowUp">▲</button><button class="touchbtn" data-key="ArrowDown">▼</button><button class="touchbtn fire" data-key="Space">FIRE</button></div></div>
 <div id="menu"><div class="card"><div class="eyebrow">A NEW OPEN-ROAD SURVIVAL EXPERIENCE</div><h1>NEON<br><span>OUTLANDS</span></h1><p>Beyond the last city, the highway belongs to the wild. Drive an armed interceptor through forgotten roads, collect energy, and survive the creatures that hunt the wasteland.</p><img class="preview" src="https://hidencod.github.io/tge-assets/packs/car-kit/thumbs/race-future.webp" alt="Kenney futuristic race car asset"><div class="controls"><span>W / ↑ ACCELERATE</span><span>A D / ← → STEER</span><span>SHIFT BOOST</span><span>SPACE FIRE</span></div><button class="primary" id="start">ENTER THE OUTLANDS</button><div class="small">3D game · Kenney CC0 asset packs · Desktop + mobile controls</div></div></div>
 <div id="gameover"><div class="card"><div class="eyebrow">SIGNAL LOST</div><h1>RUN<br><span>ENDED</span></h1><p id="finalscore">Your run has ended.</p><button class="primary" id="restart">DRIVE AGAIN</button></div></div>
@@ -38,7 +38,7 @@ const ASSETS={
 };
 const $=id=>document.getElementById(id), keys={}, clock=new THREE.Clock(), loader=new GLTFLoader();
 let scene,camera,renderer,player,carModel,carWheels=[],speed=0,steer=0,health=100,score=0,crystals=0,playing=false,loaded=0;
-let enemies=[],pickups=[],bullets=[],roadPieces=[],worldDecor=[],lastShot=0,boostFx=[],elapsed=0;
+let enemies=[],pickups=[],bullets=[],roadPieces=[],worldDecor=[],obstacles=[],lastShot=0,boostFx=[],elapsed=0,loadedModelsForWaves=null;\nlet velocityX=0,yaw=0,distanceTravelled=0,currentStage=1,stageSpawned=0,damageCooldown=0;
 const v=(x=0,y=0,z=0)=>new THREE.Vector3(x,y,z);
 function loadModel(path){return new Promise((resolve,reject)=>loader.load(ROOT+path,g=>resolve(g.scene),undefined,reject))}
 function normalizeModel(obj,target=5,ground=true){
@@ -84,8 +84,11 @@ function addPickup(source,x,z){
  const o=fitClone(source,3.3);o.position.set(x,1.7,z);o.userData.baseY=1.7;o.userData.phase=Math.random()*6;scene.add(o);pickups.push(o);
  const glow=new THREE.PointLight(0x61efff,2.5,12);glow.position.set(x,2,z);scene.add(glow);o.userData.glow=glow;
 }
-function addEnemy(source,x,z){
- const o=fitClone(source,4.2);o.position.set(x,0,z);scene.add(o);enemies.push({mesh:o,hp:3,speed:2+Math.random()*1.4,phase:Math.random()*6,fire:0});
+function addEnemy(source,x,z,level=currentStage){
+ const o=fitClone(source,4.0+Math.min(level*.22,1.5));
+ o.position.set(x,0,z);scene.add(o);
+ const elite=level>=3&&Math.random()<.28;
+ enemies.push({mesh:o,hp:elite?5:2+Math.floor(level*.45),speed:(elite?5.2:2.8)+level*.48,phase:Math.random()*6,attack:0,elite,strafe:Math.random()<.5?-1:1});
 }
 function createBullet(from,to){
  const dir=to.clone().sub(from).normalize();const mesh=new THREE.Mesh(new THREE.SphereGeometry(.18,8,6),new THREE.MeshBasicMaterial({color:0x6af5ff}));
@@ -99,38 +102,95 @@ function shoot(){
  const from=player.position.clone().add(v(0,1.7,-2.7));createBullet(from,target.mesh.position.clone().add(v(0,1.6,0)));
 }
 function update(dt){
- elapsed+=dt;
- const forward=keys.KeyW||keys.ArrowUp?1:keys.KeyS||keys.ArrowDown?-0.55:0;
- const left=keys.KeyA||keys.ArrowLeft?1:keys.KeyD||keys.ArrowRight?-1:0;
- const boost=keys.ShiftLeft||keys.ShiftRight;
- const maxSpeed=boost?58:38;
- speed=THREE.MathUtils.damp(speed,forward*maxSpeed,forward?2.4:3.5,dt);
- steer=THREE.MathUtils.damp(steer,left,6,dt);
- player.rotation.y=THREE.MathUtils.damp(player.rotation.y,steer*.42,4.5,dt);
- player.position.x+=-steer*(Math.abs(speed)*.045)*dt;
- player.position.x=THREE.MathUtils.clamp(player.position.x,-17,17);
+ elapsed+=dt; damageCooldown=Math.max(0,damageCooldown-dt);
+ const throttle=(keys.KeyW||keys.ArrowUp)?1:0;
+ const reverse=(keys.KeyS||keys.ArrowDown)?1:0;
+ const steerInput=((keys.KeyA||keys.ArrowLeft)?1:0)-((keys.KeyD||keys.ArrowRight)?1:0);
+ const boost=!!(keys.ShiftLeft||keys.ShiftRight)&&throttle>0&&speed>5;
+ // Longitudinal dynamics: engine force, braking, rolling resistance and aerodynamic drag.
+ const topSpeed=boost?58:42, acceleration=throttle?24:0, braking=reverse?42:0;
+ if(throttle) speed+=acceleration*dt;
+ else if(reverse) speed-=braking*dt;
+ else speed*=Math.exp(-(0.42+Math.abs(speed)*.012)*dt);
+ speed=THREE.MathUtils.clamp(speed,-12,topSpeed);
+ if(boost)speed=Math.min(topSpeed+12,speed+11*dt);
+ const speedFactor=THREE.MathUtils.clamp(Math.abs(speed)/24,0,1);
+ const reverseSign=speed<-.5?-1:1;
+ const steerAuthority=.25+speedFactor*.75;
+ yaw=THREE.MathUtils.damp(yaw,steerInput*0.58*steerAuthority,3.2,dt);
+ // Lateral tire response: steering creates lateral velocity; grip progressively damps slip.
+ const lateralAcceleration=steerInput*(4+speedFactor*17)*reverseSign;
+ velocityX+=lateralAcceleration*dt;
+ velocityX*=Math.exp(-(2.1+speedFactor*2.8)*dt);
+ velocityX=THREE.MathUtils.clamp(velocityX,-12,12);
+ player.position.x+=velocityX*dt;
+ player.position.x=THREE.MathUtils.clamp(player.position.x,-22,22);
  player.position.z-=speed*dt;
- if(carModel){carModel.rotation.z=THREE.MathUtils.damp(carModel.rotation.z,-steer*.12,5,dt);carModel.position.y=.03+Math.sin(elapsed*12)*.035*Math.min(1,Math.abs(speed)/10)}
+ distanceTravelled+=Math.max(0,speed)*dt;
+ player.rotation.y=THREE.MathUtils.damp(player.rotation.y,-yaw*.42,5,dt);
+ if(carModel){
+  carModel.rotation.z=THREE.MathUtils.damp(carModel.rotation.z,-velocityX*.018,5,dt);
+  carModel.rotation.x=THREE.MathUtils.damp(carModel.rotation.x,reverse?-.025:boost?-.035:0,4,dt);
+  carModel.position.y=.025+Math.sin(elapsed*9)*.025*speedFactor;
+ }
  for(const w of carWheels)w.rotation.x-=speed*dt*2.2;
- if(boost&&Math.abs(speed)>10&&Math.random()<.55){const p=new THREE.Mesh(new THREE.SphereGeometry(.12+Math.random()*.16,6,5),new THREE.MeshBasicMaterial({color:0x65dfff,transparent:true,opacity:.7}));p.position.copy(player.position).add(v((Math.random()-.5)*1.4,.3,2.6));scene.add(p);boostFx.push({mesh:p,life:.45})}
+ if(boost&&Math.random()<.65){
+  const p=new THREE.Mesh(new THREE.SphereGeometry(.12+Math.random()*.16,6,5),new THREE.MeshBasicMaterial({color:0x65dfff,transparent:true,opacity:.7}));
+  p.position.copy(player.position).add(v((Math.random()-.5)*1.4,.3,2.6));scene.add(p);boostFx.push({mesh:p,life:.45});
+ }
  if(keys.Space)shoot();
- // Camera follows behind and above the interceptor.
- const desired=player.position.clone().add(v(0,8.5,17));camera.position.lerp(desired,1-Math.exp(-4.5*dt));camera.lookAt(player.position.clone().add(v(0,1,-9)));
- for(const p of pickups){p.rotation.y+=dt*1.6;p.position.y=p.userData.baseY+Math.sin(elapsed*2+p.userData.phase)*.3;p.userData.glow.position.copy(p.position);if(p.position.distanceTo(player.position)<4.2){score+=150;crystals++;$('score').textContent=String(score).padStart(4,'0');$('crystals').textContent=crystals;p.position.z=9999;p.userData.glow.intensity=0}}
+ const desired=player.position.clone().add(v(0,8.2,17));camera.position.lerp(desired,1-Math.exp(-3.8*dt));camera.lookAt(player.position.clone().add(v(0,1,-10)));
+ // Stage progression and escalating enemy waves.
+ const nextStage=distanceTravelled<600?1:distanceTravelled<1400?2:distanceTravelled<2400?3:4;
+ if(nextStage!==currentStage){
+  currentStage=nextStage;stageSpawned=0;$('stage').textContent=String(currentStage).padStart(2,'0');
+  const label=['','THE LOST HIGHWAY','DUSTLANDS','ALIEN TERRITORY','THE DEAD ZONE'][currentStage];
+  const m=$('mission'); if(m)m.innerHTML='<strong>ZONE 0'+currentStage+' · '+label+'</strong>Hostiles are getting faster. Keep moving and collect energy.';
+ }
+ if(loadedModelsForWaves && stageSpawned<currentStage*4+4){
+  const count=Math.min(2,currentStage*4+4-stageSpawned);
+  for(let i=0;i<count;i++){addEnemy(loadedModelsForWaves,(Math.random()-.5)*26,player.position.z-150-Math.random()*190,currentStage);stageSpawned++}
+ }
+ for(const p of pickups){
+  p.rotation.y+=dt*1.6;p.position.y=p.userData.baseY+Math.sin(elapsed*2+p.userData.phase)*.3;p.userData.glow.position.copy(p.position);
+  if(p.position.distanceTo(player.position)<4.2){score+=150;crystals++;$('score').textContent=String(score).padStart(4,'0');$('crystals').textContent=crystals;p.position.z=9999;p.userData.glow.intensity=0}
+ }
  pickups=pickups.filter(p=>p.position.z<9000);
  for(const e of enemies){
-  e.phase+=dt*2.4;const dx=player.position.x-e.mesh.position.x,dz=player.position.z-e.mesh.position.z;
-  if(Math.abs(dz)<100){e.mesh.position.x+=Math.sign(dx)*Math.min(Math.abs(dx),e.speed*dt*.65);e.mesh.position.z+=Math.sign(dz)*Math.min(Math.abs(dz),e.speed*dt*.55)}
-  e.mesh.rotation.y=Math.atan2(-dx,-dz);e.mesh.position.y=Math.abs(Math.sin(e.phase))*.12;
-  if(e.mesh.position.distanceTo(player.position)<4.5){health-=12*dt;$('healthbar').style.width=Math.max(0,health)+'%'}
-  if(e.mesh.position.z>player.position.z+40)e.mesh.position.z=player.position.z-180-Math.random()*100;
+  e.phase+=dt*(2.2+currentStage*.25);
+  const dx=player.position.x-e.mesh.position.x,dz=player.position.z-e.mesh.position.z;
+  if(Math.abs(dz)<125){
+   const desiredLane=THREE.MathUtils.clamp(player.position.x+Math.sin(e.phase*.7)*e.strafe*5,-19,19);
+   e.mesh.position.x=THREE.MathUtils.damp(e.mesh.position.x,desiredLane,1.5+currentStage*.25,dt);
+   e.mesh.position.z+=Math.sign(dz)*Math.min(Math.abs(dz),e.speed*dt*(dz>0?1.05:.3));
+  }
+  e.mesh.rotation.y=Math.atan2(-dx,-dz);e.mesh.position.y=Math.abs(Math.sin(e.phase))*.16;
+  if(e.mesh.position.distanceTo(player.position)<4.6&&damageCooldown<=0){
+   health-=e.elite?22:14;damageCooldown=.75;$('healthbar').style.width=Math.max(0,health)+'%';
+   velocityX+=Math.sign(player.position.x-e.mesh.position.x)*5;speed*=.72;
+  }
+  if(e.mesh.position.z>player.position.z+45){e.mesh.position.set((Math.random()-.5)*28,0,player.position.z-190-Math.random()*100)}
  }
- for(const b of bullets){b.mesh.position.addScaledVector(b.dir,75*dt);b.life-=dt;for(const e of enemies){if(e.mesh.visible&&b.mesh.position.distanceTo(e.mesh.position.clone().add(v(0,1.5,0)))<3){e.hp--;b.life=0;if(e.hp<=0){score+=250;$('score').textContent=String(score).padStart(4,'0');e.mesh.position.z=player.position.z-260-Math.random()*100;e.hp=3}}}}
+ for(const b of bullets){
+  b.mesh.position.addScaledVector(b.dir,95*dt);b.life-=dt;
+  for(const e of enemies){
+   if(e.mesh.visible&&b.mesh.position.distanceTo(e.mesh.position.clone().add(v(0,1.5,0)))<3.2){
+    e.hp--;b.life=0;
+    if(e.hp<=0){score+=e.elite?500:250;$('score').textContent=String(score).padStart(4,'0');e.mesh.position.set((Math.random()-.5)*28,0,player.position.z-240-Math.random()*120);e.hp=2+Math.floor(currentStage*.45)}
+   }
+  }
+ }
  bullets=bullets.filter(b=>{if(b.life<=0){scene.remove(b.mesh);return false}return true});
  for(const p of boostFx){p.life-=dt;p.mesh.scale.multiplyScalar(1+dt*2);p.mesh.material.opacity=Math.max(0,p.life*1.8)}
  boostFx=boostFx.filter(p=>{if(p.life<=0){scene.remove(p.mesh);return false}return true});
+ // Rock impacts punish reckless driving but cannot repeatedly drain health every frame.
+ for(const rock of obstacles){
+  if(rock.position.distanceTo(player.position)<3.8&&damageCooldown<=0){
+   health-=10;damageCooldown=1.0;speed*=.45;velocityX+=player.position.x<rock.position.x?-5:5;
+   $('healthbar').style.width=Math.max(0,health)+'%';
+  }
+ }
  $('speed').textContent=Math.round(Math.abs(speed)*3.1);
- // Recycle road/environment to create a long forward expedition.
  for(const r of roadPieces)if(r.position.z>player.position.z+60)r.position.z-=720;
  for(const o of worldDecor)if(o.position.z>player.position.z+90)o.position.z-=1000;
  if(health<=0)endGame();
@@ -148,10 +208,10 @@ async function boot(){
  if(loadedModels.road)addRoads(loadedModels.road);else{const fallback=new THREE.Mesh(new THREE.PlaneGeometry(28,900),new THREE.MeshStandardMaterial({color:0x252d34}));fallback.rotation.x=-Math.PI/2;fallback.position.z=-350;scene.add(fallback)}
  if(loadedModels.tree){scatter(loadedModels.tree,65,260,900,10);scatter(loadedModels.tree,40,330,900,8)}
  if(loadedModels.pine)scatter(loadedModels.pine,45,360,950,9);
- if(loadedModels.rock)scatter(loadedModels.rock,45,300,900,5);
+ if(loadedModels.rock){scatter(loadedModels.rock,45,300,900,5); for(const o of worldDecor.slice(-45))obstacles.push(o);}
  if(loadedModels.building)addBuildings(loadedModels.building);
  if(loadedModels.crystal){for(let i=0;i<30;i++)addPickup(loadedModels.crystal,(Math.random()-.5)*24,-55-i*30-Math.random()*18)}
- if(loadedModels.alien){for(let i=0;i<14;i++)addEnemy(loadedModels.alien,(Math.random()-.5)*30,-90-i*65)}
+ if(loadedModels.alien){loadedModelsForWaves=loadedModels.alien;for(let i=0;i<8;i++){addEnemy(loadedModels.alien,(Math.random()-.5)*26,-110-i*90,1);stageSpawned++}}
  if(loadedModels.car){
   carModel=normalizeModel(loadedModels.car.clone(true),6,true);carModel.rotation.y=Math.PI;player.add(carModel);
   carModel.traverse(o=>{if(o.isMesh&&/wheel|tire|tyre/i.test(o.name))carWheels.push(o)});
@@ -162,7 +222,7 @@ async function boot(){
  camera.position.set(0,9,18);camera.lookAt(0,0,-8);
  $('loading').style.display='none';
 }
-$('start').addEventListener('click',()=>{$('menu').style.display='none';$('hud').style.display='block';if(innerWidth<800)$('touch').style.display='flex';health=100;playing=true;clock.start()});
+$('start').addEventListener('click',()=>{$('menu').style.display='none';$('hud').style.display='block';if(innerWidth<800)$('touch').style.display='flex';health=100;speed=0;velocityX=0;yaw=0;distanceTravelled=0;currentStage=1;stageSpawned=0;$('stage').textContent='01';playing=true;clock.start()});
 $('restart').addEventListener('click',()=>location.reload());
 addEventListener('keydown',e=>{keys[e.code]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault()},{passive:false});
 addEventListener('keyup',e=>keys[e.code]=false);
