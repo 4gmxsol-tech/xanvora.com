@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#07101c"><title>NEON FRONTIER — Xanvora Open World</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07101c;color:#eafcff;font-family:Inter,system-ui,Arial;touch-action:none}#view{position:fixed;inset:0}canvas{display:block;width:100%;height:100%}
+#hud{position:fixed;inset:0;pointer-events:none}.top{position:absolute;top:14px;left:14px;display:flex;gap:8px;flex-wrap:wrap}.pill{background:#061526c9;border:1px solid #49dff477;border-radius:10px;padding:9px 12px;font-size:11px;backdrop-filter:blur(8px);box-shadow:0 0 20px #00d9ff18}.pill b{color:#fff;margin-left:5px;font-size:14px}.health{position:absolute;top:70px;left:14px;width:190px;height:9px;border:1px solid #80edff88;border-radius:20px;overflow:hidden;background:#08101e}.health i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#00f0ad,#00dfff);transition:width .2s}.map{position:absolute;right:14px;top:14px;width:164px;height:164px;border:1px solid #5deaff99;border-radius:12px;background:#061526d9;box-shadow:0 0 25px #00d9ff20}.map canvas{width:100%;height:100%;border-radius:12px}.help{position:absolute;left:14px;bottom:14px;padding:9px 12px;background:#061526b9;border:1px solid #49dff455;border-radius:9px;color:#a9c9d6;font-size:10px;line-height:1.6}.boss{position:absolute;top:70px;left:50%;transform:translateX(-50%);width:min(320px,55vw);display:none;text-align:center;font-size:10px;letter-spacing:.16em;color:#ff9de9}.boss.show{display:block}.bossbar{height:8px;border:1px solid #ff8de7;border-radius:10px;margin-top:5px;overflow:hidden;background:#210e2c}.bossbar i{display:block;height:100%;width:100%;background:#ff36c7}.toast{position:absolute;top:30%;left:50%;transform:translateX(-50%);font-size:clamp(18px,4vw,32px);font-weight:900;letter-spacing:.13em;text-shadow:0 0 20px #00eaff;opacity:0;transition:opacity .2s}.toast.on{opacity:1}.cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:24px;color:#aaffff;text-shadow:0 0 12px #00efff}.overlay{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:#020814b8;backdrop-filter:blur(9px);z-index:5}.overlay.hide{display:none}.card{width:min(92vw,520px);padding:30px;text-align:center;border:1px solid #50eaff88;border-radius:22px;background:linear-gradient(145deg,#0d2036f5,#11102bf5);box-shadow:0 0 70px #00d9ff20}.eyebrow{color:#00efff;font-size:10px;letter-spacing:.3em;font-weight:900}.card h1{font-size:clamp(38px,8vw,64px);line-height:.95;margin:14px 0;text-shadow:0 0 25px #00eaff88}.card p{color:#a9c4d4;font-size:13px;line-height:1.7}.btn{pointer-events:auto;border:1px solid #4ceaff99;background:#0b2940;color:#edffff;border-radius:11px;padding:12px 17px;font-weight:900;cursor:pointer}.primary{background:linear-gradient(100deg,#00eaff,#00ffa8);border:0;color:#061321;padding:15px 28px;margin-top:10px}.mobile{display:none;position:fixed;inset:auto 12px 16px;z-index:3;pointer-events:none;justify-content:space-between;align-items:end}.stick{width:128px;height:128px;border-radius:50%;border:1px solid #9df7ff77;background:#09243c99;position:relative;pointer-events:auto;touch-action:none}.knob{position:absolute;width:48px;height:48px;left:39px;top:39px;border-radius:50%;background:#4feaffaa;border:1px solid #dfffff;box-shadow:0 0 18px #00eaff66}.fire{pointer-events:auto;width:88px;height:88px;border-radius:50%;border:1px solid #ff8be9;background:#8e1768bb;color:white;font-weight:1000;box-shadow:0 0 25px #ff00ae44;touch-action:none}.mobileTip{position:fixed;right:14px;bottom:120px;color:#d3faff;font-size:10px;z-index:2;pointer-events:none}
+@media(max-width:700px){.mobile{display:flex}.map{width:112px;height:112px}.health{top:62px;width:140px}.help{display:none}.top{top:8px;left:8px}.pill{padding:7px 9px;font-size:9px}.pill b{font-size:12px}.boss{top:64px}.mobileTip{display:block}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js"}}</script></head>
+<body><div id="view"></div>
+<div id="hud"><div class="top"><div class="pill">ZONE <b id="zone">NEON WILDS</b></div><div class="pill">SCORE <b id="score">0</b></div><div class="pill">KILLS <b id="kills">0</b></div><div class="pill">FPS <b id="fps">—</b></div></div><div class="health"><i id="hp"></i></div><div class="map"><canvas id="map" width="328" height="328"></canvas></div><div class="boss" id="boss"><span>VOID COLOSSUS</span><div class="bossbar"><i id="bossHp"></i></div></div><div class="cross">＋</div><div class="toast" id="toast"></div><div class="help">WASD / ARROWS · MOVE<br>HOLD LEFT CLICK / SPACE · FIRE<br>DRAG MOUSE · ORBIT CAMERA<br>SHIFT · SPRINT · P · PAUSE</div></div>
+<div class="mobile" id="mobile"><div class="stick" id="stick"><div class="knob" id="knob"></div></div><button class="fire" id="fire">FIRE</button></div><div class="mobileTip">Drag screen to look around</div>
+<section class="overlay" id="menu"><div class="card"><div class="eyebrow">XANVORA PRESENTS · OPEN WORLD COMBAT</div><h1>NEON<br><span style="color:#ff43d1">FRONTIER</span></h1><p>Explore a vast neon wilderness. Fight roaming drones, discover outposts, survive ambushes and hunt the Void Colossus. The world continues beyond the horizon.</p><button class="btn primary" id="start">ENTER THE WORLD</button><p>Desktop: WASD + mouse · Mobile: virtual joystick + FIRE · Hold to keep firing.</p></div></section>
+<section class="overlay hide" id="dead"><div class="card"><div class="eyebrow">SIGNAL LOST</div><h1>YOU FELL</h1><p id="endStats">Your expedition has ended.</p><button class="btn primary" id="retry">RESPAWN</button></div></section>
+<script type="module">
+import * as THREE from 'three';
+const $=id=>document.getElementById(id),root=$('view');
+let scene,camera,renderer,clock,player,playerMesh,weapon,terrain,worldGroup,paused=true,dead=false,score=0,kills=0,hp=100,fireHeld=false,fireTimer=0,spawnTimer=0,bossTimer=90,boss=null,worldTime=0;
+const keys={},enemies=[],bullets=[],enemyBullets=[],decor=[],colliders=[];
+let yaw=0,pitch=-.22,joy={x:0,y:0},dragLook=false,lastPointer={x:0,y:0},fpsFrames=0,fpsTime=0,renderScale=Math.min(devicePixelRatio||1,1.5);
+const V=(x=0,y=0,z=0)=>new THREE.Vector3(x,y,z);
+function material(color,emissive=color,roughness=.6){return new THREE.MeshStandardMaterial({color,emissive,emissiveIntensity:.55,roughness,metalness:.25})}
+function makeBox(w,h,d,mat){return new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat)}
+function init(){
+ scene=new THREE.Scene();scene.background=new THREE.Color(0x071321);scene.fog=new THREE.FogExp2(0x071321,.0025);
+ camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,1800);
+ renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',alpha:false});
+ renderer.setPixelRatio(renderScale);renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;root.appendChild(renderer.domElement);
+ clock=new THREE.Clock();
+ scene.add(new THREE.HemisphereLight(0x8adfff,0x162039,2.0));
+ const sun=new THREE.DirectionalLight(0x9beaff,2.1);sun.position.set(-90,150,80);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-100;sun.shadow.camera.right=100;sun.shadow.camera.top=100;sun.shadow.camera.bottom=-100;scene.add(sun);
+ const glow=new THREE.PointLight(0x00dfff,90,180);glow.position.set(0,22,0);scene.add(glow);
+ worldGroup=new THREE.Group();scene.add(worldGroup);
+ buildWorld();
+ player=new THREE.Group();scene.add(player);player.position.set(0,1,0);
+ const body=new THREE.Mesh(new THREE.CapsuleGeometry(.55,.9,5,8),material(0x00bcd4,0x00eaff));body.position.y=1.05;body.castShadow=true;player.add(body);
+ const chest=makeBox(.62,.42,.38,material(0x142c51,0x124a82));chest.position.set(0,1.45,-.12);player.add(chest);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.32,12,10),material(0xdffaff,0x00cfff));head.position.set(0,2.02,0);player.add(head);
+ weapon=makeBox(.18,.18,1.05,material(0x334c67,0x00eaff));weapon.position.set(.48,1.35,-.65);player.add(weapon);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.7,.045,6,24),new THREE.MeshBasicMaterial({color:0x00efff}));ring.rotation.x=Math.PI/2;ring.position.y=.08;player.add(ring);
+ buildMap();resize();animate();
+}
+function buildWorld(){
+ const groundMat=new THREE.MeshStandardMaterial({color:0x101f2c,roughness:1});
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(1800,1800,100,100),groundMat);floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;worldGroup.add(floor);
+ // Broad low rolling terrain patches and glowing paths create a readable open world.
+ for(let i=0;i<100;i++){
+  const x=(Math.random()-.5)*1100,z=(Math.random()-.5)*1100;
+  const geo=new THREE.CircleGeometry(THREE.MathUtils.randFloat(7,24),12);
+  const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:[0x172e3a,0x1c263d,0x243049][i%3],roughness:1}));
+  m.rotation.x=-Math.PI/2;m.position.set(x,.025,z);worldGroup.add(m);
+ }
+ const pathMat=new THREE.MeshBasicMaterial({color:0x087d98,transparent:true,opacity:.28});
+ for(let i=0;i<14;i++){const p=makeBox(3,.035,160,pathMat);p.position.set((i-7)*38,.05,0);worldGroup.add(p)}
+ const crystalMat=material(0x13a9c2,0x00dfff),treeMat=material(0x172c3e,0x061d32),rockMat=material(0x38445b,0x101c31);
+ for(let i=0;i<240;i++){
+  const x=(Math.random()-.5)*1000,z=(Math.random()-.5)*1000;if(Math.hypot(x,z)<22)continue;
+  const h=THREE.MathUtils.randFloat(2,10),isCrystal=Math.random()<.45;
+  const mesh=new THREE.Mesh(isCrystal?new THREE.OctahedronGeometry(THREE.MathUtils.randFloat(1,2.6),0):new THREE.ConeGeometry(THREE.MathUtils.randFloat(1.2,2.5),h,5),isCrystal?crystalMat:treeMat);
+  mesh.position.set(x,isCrystal?h*.55:h*.5,z);mesh.rotation.y=Math.random()*6;mesh.castShadow=true;worldGroup.add(mesh);
+  if(!isCrystal){const trunk=makeBox(.65,2,.65,rockMat);trunk.position.set(x,1,z);worldGroup.add(trunk)}
+ }
+ // Landmark towers visible from a distance.
+ for(let i=0;i<18;i++){
+  const a=i/18*Math.PI*2,r=THREE.MathUtils.randFloat(130,450),x=Math.cos(a)*r,z=Math.sin(a)*r;
+  const tower=makeBox(5,THREE.MathUtils.randFloat(18,38),5,material(0x213b57,0x003f70));tower.position.set(x,tower.geometry.parameters.height/2,z);tower.castShadow=true;worldGroup.add(tower);
+  const beacon=new THREE.PointLight(0xff27c8,35,45);beacon.position.set(x,tower.position.y+5,z);worldGroup.add(beacon);
+ }
+}
+let mapCtx,mapCanvas;
+function buildMap(){mapCanvas=$('map');mapCtx=mapCanvas.getContext('2d')}
+function updateMap(){
+ if(!mapCtx)return;const c=mapCtx,s=mapCanvas.width;c.clearRect(0,0,s,s);c.fillStyle='#071827';c.fillRect(0,0,s,s);
+ c.strokeStyle='#1c5264';c.globalAlpha=.5;for(let i=0;i<=8;i++){c.beginPath();c.moveTo(i*s/8,0);c.lineTo(i*s/8,s);c.stroke();c.beginPath();c.moveTo(0,i*s/8);c.lineTo(s,i*s/8);c.stroke()}c.globalAlpha=1;
+ const scale=.24,ox=s/2-player.position.x*scale,oy=s/2-player.position.z*scale;
+ c.fillStyle='#12cde5';for(const e of enemies){const x=ox+e.group.position.x*scale,y=oy+e.group.position.z*scale;c.beginPath();c.arc(x,y,4,0,7);c.fill()}
+ if(boss){c.fillStyle='#ff27d8';c.beginPath();c.arc(ox+boss.group.position.x*scale,oy+boss.group.position.z*scale,7,0,7);c.fill()}
+ c.save();c.translate(s/2,s/2);c.rotate(-yaw);c.fillStyle='#fff';c.beginPath();c.moveTo(0,-10);c.lineTo(7,8);c.lineTo(0,5);c.lineTo(-7,8);c.closePath();c.fill();c.restore();
+}
+function makeEnemy(x,z,elite=false){
+ const g=new THREE.Group();const shell=new THREE.Mesh(new THREE.IcosahedronGeometry(elite?1.8:1.1,1),material(elite?0xff8b35:0xff2cba,elite?0xff5a00:0xff00ae));shell.position.y=1.2;shell.castShadow=true;g.add(shell);
+ const eyeMat=new THREE.MeshBasicMaterial({color:0xffffff});for(const side of [-1,1]){const eye=makeBox(.18,.14,.08,eyeMat);eye.position.set(side*.34,1.35,-.85);g.add(eye)}
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(elite?1.8:1.15,.06,6,18),new THREE.MeshBasicMaterial({color:elite?0xffbd65:0xff6be1}));ring.rotation.x=Math.PI/2;ring.position.y=.45;g.add(ring);
+ g.position.set(x,0,z);scene.add(g);const e={group:g,hp:elite?5:2,max:elite?5:2,elite,speed:elite?5.2:3.6,phase:Math.random()*6,fire:2+Math.random()*2};enemies.push(e);return e;
+}
+function makeBoss(){
+ const g=new THREE.Group();const core=new THREE.Mesh(new THREE.DodecahedronGeometry(5,1),material(0x9d1a82,0xff00bd));core.position.y=6;core.castShadow=true;g.add(core);
+ for(let i=0;i<6;i++){const arm=makeBox(.8,9,.8,material(0x4d2d69,0xff00a8));const a=i*Math.PI/3;arm.position.set(Math.cos(a)*6,5,Math.sin(a)*6);arm.rotation.z=Math.cos(a)*.35;arm.rotation.x=Math.sin(a)*.35;g.add(arm)}
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(8,.22,8,48),new THREE.MeshBasicMaterial({color:0xff2cce}));ring.rotation.x=Math.PI/2;ring.position.y=2;g.add(ring);
+ const x=player.position.x+Math.random()*90-45,z=player.position.z-100;g.position.set(x,0,z);scene.add(g);boss={group:g,hp:120,max:120,fire:1.3,phase:0};$('boss').classList.add('show');say('VOID COLOSSUS DETECTED');
+}
+function say(msg){const el=$('toast');el.textContent=msg;el.classList.add('on');clearTimeout(say.timer);say.timer=setTimeout(()=>el.classList.remove('on'),1700)}
+function fire(){
+ if(paused||dead||fireTimer>0)return;fireTimer=.105;
+ const dir=V(-Math.sin(yaw),Math.sin(pitch),-Math.cos(yaw)).normalize();
+ const origin=player.position.clone().add(V(0,1.5,0)).add(dir.clone().multiplyScalar(1.3));
+ const mesh=new THREE.Mesh(new THREE.SphereGeometry(.17,8,6),new THREE.MeshBasicMaterial({color:0x8fffff}));mesh.position.copy(origin);scene.add(mesh);
+ const glow=new THREE.PointLight(0x00eaff,3,7);mesh.add(glow);
+ bullets.push({mesh,vel:dir.multiplyScalar(95),life:2.2,damage:1});
+}
+function killEnemy(e){
+ scene.remove(e.group);const i=enemies.indexOf(e);if(i>=0)enemies.splice(i,1);kills++;score+=e.elite?180:65;$('kills').textContent=kills;$('score').textContent=score;
+}
+function damagePlayer(n){if(dead)return;hp=Math.max(0,hp-n);$('hp').style.width=hp+'%';if(hp<=0){dead=true;paused=true;$('endStats').textContent='Score '+score+' · Drones destroyed '+kills;$('dead').classList.remove('hide')}}
+function update(dt){
+ if(paused||dead)return;worldTime+=dt;fireTimer=Math.max(0,fireTimer-dt);spawnTimer-=dt;bossTimer-=dt;
+ const forward=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-joy.y;
+ const side=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+joy.x;
+ const v=V(side,0,-forward);if(v.lengthSq()>1)v.normalize();const sprint=keys.ShiftLeft||keys.ShiftRight?1.65:1;v.applyAxisAngle(V(0,1,0),yaw);
+ player.position.addScaledVector(v,19*sprint*dt);player.position.y=0;
+ if(v.lengthSq()>.01){const face=Math.atan2(-v.x,-v.z);player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,face,1-Math.exp(-12*dt))}
+ if(fireHeld&&fireTimer<=0)fire();
+ // Smooth third-person follow camera; mouse/touch drag exposes a full 360-degree view.
+ const look=V(player.position.x,player.position.y+1.5,player.position.z);
+ const distance=12,camOffset=V(Math.sin(yaw)*distance,4.5-pitch*8,Math.cos(yaw)*distance);
+ const desired=look.clone().add(camOffset);camera.position.lerp(desired,1-Math.exp(-8*dt));camera.lookAt(look);
+ if(spawnTimer<=0&&enemies.length<28){const a=Math.random()*Math.PI*2,r=THREE.MathUtils.randFloat(45,105);makeEnemy(player.position.x+Math.cos(a)*r,player.position.z+Math.sin(a)*r,Math.random()<.16);spawnTimer=Math.max(.55,1.6-enemies.length*.025)}
+ if(bossTimer<=0&&!boss){makeBoss();bossTimer=145}
+ for(const e of [...enemies]){
+  e.phase+=dt*2;e.fire-=dt;const d=V(player.position.x-e.group.position.x,0,player.position.z-e.group.position.z),len=d.length();
+  if(len>2.5)e.group.position.addScaledVector(d.normalize(),e.speed*dt);
+  e.group.position.y=.18+Math.sin(e.phase)*.35;e.group.rotation.y+=dt*.8;
+  if(len<2.7){damagePlayer(e.elite?17:9);e.group.position.addScaledVector(d.normalize(),-3)}
+  if(e.fire<=0&&len<70){e.fire=3+Math.random()*1.5;const dir=player.position.clone().add(V(0,1,0)).sub(e.group.position.clone().add(V(0,1.2,0))).normalize();const m=new THREE.Mesh(new THREE.SphereGeometry(.22,8,6),new THREE.MeshBasicMaterial({color:0xff45d4}));m.position.copy(e.group.position).add(V(0,1.2,0));scene.add(m);enemyBullets.push({mesh:m,vel:dir.multiplyScalar(25),life:3})}
+ }
+ for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];b.mesh.position.addScaledVector(b.vel,dt);b.life-=dt;let hit=false;
+  for(const e of [...enemies])if(b.mesh.position.distanceTo(e.group.position.clone().add(V(0,1.2,0)))<1.5){e.hp-=b.damage;hit=true;if(e.hp<=0)killEnemy(e);break}
+  if(boss&&b.mesh.position.distanceTo(boss.group.position.clone().add(V(0,5,0)))<6){boss.hp-=b.damage*2;hit=true;if(boss.hp<=0){score+=2500;scene.remove(boss.group);boss=null;$('boss').classList.remove('show');$('score').textContent=score;say('COLOSSUS ELIMINATED · +2500')}$('bossHp').style.width=(boss?boss.hp/boss.max*100:0)+'%'}
+  if(hit||b.life<=0){scene.remove(b.mesh);bullets.splice(i,1)}
+ }
+ for(let i=enemyBullets.length-1;i>=0;i--){const b=enemyBullets[i];b.mesh.position.addScaledVector(b.vel,dt);b.life-=dt;if(b.mesh.position.distanceTo(player.position.clone().add(V(0,1,0)))<1.5){damagePlayer(7);b.life=0}if(b.life<=0){scene.remove(b.mesh);enemyBullets.splice(i,1)}}
+ if(boss){boss.phase+=dt;boss.group.position.x=THREE.MathUtils.lerp(boss.group.position.x,player.position.x+Math.sin(boss.phase)*20,dt*.35);boss.group.position.z=THREE.MathUtils.lerp(boss.group.position.z,player.position.z-35,dt*.35);boss.group.rotation.y+=dt*.5;boss.fire-=dt;if(boss.fire<=0){boss.fire=1.6;const dir=player.position.clone().add(V(0,1,0)).sub(boss.group.position.clone().add(V(0,5,0))).normalize();for(let j=-1;j<=1;j++){const d=dir.clone().applyAxisAngle(V(0,1,0),j*.18);const m=new THREE.Mesh(new THREE.SphereGeometry(.42,8,6),new THREE.MeshBasicMaterial({color:0xff00bd}));m.position.copy(boss.group.position).add(V(0,5,0));scene.add(m);enemyBullets.push({mesh:m,vel:d.multiplyScalar(31),life:3.5})}}}
+ $('bossHp').style.width=(boss?boss.hp/boss.max*100:0)+'%';updateMap();
+}
+function render(){renderer.render(scene,camera)}
+function animate(){
+ requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);if(!paused)update(dt);render();
+ fpsFrames++;fpsTime+=dt;if(fpsTime>=.5){$('fps').textContent=Math.round(fpsFrames/fpsTime);fpsFrames=0;fpsTime=0}
+}
+function resize(){if(!renderer)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio||1,renderScale));renderer.setSize(innerWidth,innerHeight)}
+function setFire(v){fireHeld=v;if(v)fire()}
+$('start').onclick=()=>{$('menu').classList.add('hide');paused=false;clock.getDelta();say('EXPLORE THE FRONTIER')};
+$('retry').onclick=()=>{location.reload()};
+$('fire').addEventListener('pointerdown',e=>{e.preventDefault();setFire(true);$('fire').setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>$('fire').addEventListener(ev,()=>setFire(false)));
+addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Space'){e.preventDefault();setFire(true)}if(e.code==='KeyP'&&!e.repeat)paused=!paused});
+addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='Space')setFire(false)});
+renderer?.domElement.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0)setFire(true);if(e.button===2||e.pointerType==='touch'){dragLook=true;lastPointer={x:e.clientX,y:e.clientY}}});
+addEventListener('pointerup',e=>{if(e.pointerType==='mouse'&&e.button===0)setFire(false);dragLook=false});
+addEventListener('pointermove',e=>{if(dragLook){yaw-=(e.clientX-lastPointer.x)*.006;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-lastPointer.y)*.003,-.65,.42);lastPointer={x:e.clientX,y:e.clientY}}});
+addEventListener('contextmenu',e=>e.preventDefault());
+const stick=$('stick'),knob=$('knob');let stickId=null;
+stick.addEventListener('pointerdown',e=>{stickId=e.pointerId;stick.setPointerCapture(e.pointerId);moveStick(e)});
+stick.addEventListener('pointermove',e=>{if(e.pointerId===stickId)moveStick(e)});
+function moveStick(e){const r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,len=Math.hypot(dx,dy),max=42,k=Math.min(1,max/(len||1));joy.x=dx*k/max;joy.y=dy*k/max;knob.style.transform='translate('+dx*k+'px,'+dy*k+'px)'}
+function resetStick(){stickId=null;joy={x:0,y:0};knob.style.transform='translate(0,0)'}
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>stick.addEventListener(ev,resetStick));
+addEventListener('resize',resize);
+try{init()}catch(e){console.error(e);$('menu').querySelector('p').textContent='WebGL could not start on this device. Try a browser with WebGL enabled.'}
+</script></body></html>
