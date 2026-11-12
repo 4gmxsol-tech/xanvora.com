@@ -1,0 +1,8 @@
+name = "xanvora-neon-leaderboard"
+main = "index.js"
+compatibility_date = "2026-11-12"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "xanvora-neon-leaderboard"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
