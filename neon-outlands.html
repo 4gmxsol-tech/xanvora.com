@@ -38,7 +38,8 @@ const ASSETS={
 };
 const $=id=>document.getElementById(id), keys={}, clock=new THREE.Clock(), loader=new GLTFLoader();
 let scene,camera,renderer,player,carModel,carWheels=[],speed=0,steer=0,health=100,score=0,crystals=0,playing=false,loaded=0;
-let enemies=[],pickups=[],bullets=[],roadPieces=[],worldDecor=[],obstacles=[],lastShot=0,boostFx=[],elapsed=0,loadedModelsForWaves=null;\nlet velocityX=0,yaw=0,distanceTravelled=0,currentStage=1,stageSpawned=0,damageCooldown=0;
+let enemies=[],pickups=[],bullets=[],roadPieces=[],worldDecor=[],obstacles=[],lastShot=0,boostFx=[],elapsed=0,loadedModelsForWaves=null;
+let velocityX=0,yaw=0,distanceTravelled=0,currentStage=1,stageSpawned=0,damageCooldown=0;
 const v=(x=0,y=0,z=0)=>new THREE.Vector3(x,y,z);
 function loadModel(path){return new Promise((resolve,reject)=>loader.load(ROOT+path,g=>resolve(g.scene),undefined,reject))}
 function normalizeModel(obj,target=5,ground=true){
@@ -119,7 +120,7 @@ function update(dt){
  const steerAuthority=.25+speedFactor*.75;
  yaw=THREE.MathUtils.damp(yaw,steerInput*0.58*steerAuthority,3.2,dt);
  // Lateral tire response: steering creates lateral velocity; grip progressively damps slip.
- const lateralAcceleration=steerInput*(4+speedFactor*17)*reverseSign;
+ const lateralAcceleration=-steerInput*(4+speedFactor*17)*reverseSign;
  velocityX+=lateralAcceleration*dt;
  velocityX*=Math.exp(-(2.1+speedFactor*2.8)*dt);
  velocityX=THREE.MathUtils.clamp(velocityX,-12,12);
